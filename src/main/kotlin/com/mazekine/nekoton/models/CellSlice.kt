@@ -1,4 +1,4 @@
-package com.broxus.nekoton.models
+package com.mazekine.nekoton.models
 
 import com.ionspin.kotlin.bignum.integer.BigInteger
 

@@ -1,4 +1,4 @@
-package com.broxus.nekoton.models
+package com.mazekine.nekoton.models
 
 import kotlinx.serialization.Serializable
 

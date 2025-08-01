@@ -1,6 +1,6 @@
-package com.broxus.nekoton.transport
+package com.mazekine.nekoton.transport
 
-import com.broxus.nekoton.models.*
+import com.mazekine.nekoton.models.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
 
@@ -281,7 +281,7 @@ data class BlockInfo(
 @Serializable
 data class SignedExternalMessage(
     val message: Message,
-    val signature: com.broxus.nekoton.crypto.Signature,
+    val signature: com.mazekine.nekoton.crypto.Signature,
     val signatureId: Int? = null
 ) {
     /**

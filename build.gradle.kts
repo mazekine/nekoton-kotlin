@@ -5,7 +5,7 @@ plugins {
     `maven-publish`
 }
 
-group = "com.broxus"
+group = "com.mazekine"
 version = "0.1.0"
 
 repositories {

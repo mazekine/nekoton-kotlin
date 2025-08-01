@@ -1,4 +1,4 @@
-package com.broxus.nekoton.crypto
+package com.mazekine.nekoton.crypto
 
 import com.ionspin.kotlin.bignum.integer.BigInteger
 import kotlinx.serialization.Serializable

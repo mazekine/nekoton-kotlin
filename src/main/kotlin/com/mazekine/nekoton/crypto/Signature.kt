@@ -1,4 +1,4 @@
-package com.broxus.nekoton.crypto
+package com.mazekine.nekoton.crypto
 
 import kotlinx.serialization.Serializable
 

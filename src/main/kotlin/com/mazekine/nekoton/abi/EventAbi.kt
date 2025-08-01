@@ -1,8 +1,8 @@
-package com.broxus.nekoton.abi
+package com.mazekine.nekoton.abi
 
-import com.broxus.nekoton.models.Cell
-import com.broxus.nekoton.models.CellSlice
-import com.broxus.nekoton.models.Message
+import com.mazekine.nekoton.models.Cell
+import com.mazekine.nekoton.models.CellSlice
+import com.mazekine.nekoton.models.Message
 import kotlinx.serialization.Serializable
 
 /**

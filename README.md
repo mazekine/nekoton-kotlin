@@ -24,16 +24,16 @@ Add the following to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("com.broxus:nekoton-kotlin:0.1.0")
+    implementation("com.mazekine:nekoton-kotlin:0.1.0")
 }
 ```
 
 ## Quick Start
 
 ```kotlin
-import com.broxus.nekoton.crypto.KeyPair
-import com.broxus.nekoton.models.Address
-import com.broxus.nekoton.transport.Transport
+import com.mazekine.nekoton.crypto.KeyPair
+import com.mazekine.nekoton.models.Address
+import com.mazekine.nekoton.transport.Transport
 
 // Generate a new key pair
 val keyPair = KeyPair.generate()
@@ -49,25 +49,25 @@ val tokens = Tokens.fromTokens("1.5")
 
 The library is organized into several key packages:
 
-### Models (`com.broxus.nekoton.models`)
+### Models (`com.mazekine.nekoton.models`)
 - `Address` - Blockchain addresses
 - `Cell`, `CellSlice`, `CellBuilder` - Low-level cell operations
 - `Tokens` - Token amount handling with arbitrary precision
 - `Transaction`, `Message` - Blockchain transaction and message types
 - `AccountState` - Account state management
 
-### Crypto (`com.broxus.nekoton.crypto`)
+### Crypto (`com.mazekine.nekoton.crypto`)
 - `KeyPair` - Ed25519 key pair generation and management
 - `PublicKey` - Public key operations and verification
 - `Signature` - Digital signature handling
 - `Seed` - Mnemonic seed phrase support (Legacy and BIP39)
 
-### ABI (`com.broxus.nekoton.abi`)
+### ABI (`com.mazekine.nekoton.abi`)
 - `ContractAbi` - Smart contract ABI parsing and interaction
 - `FunctionAbi` - Function call encoding/decoding
 - `EventAbi` - Event data decoding
 
-### Transport (`com.broxus.nekoton.transport`)
+### Transport (`com.mazekine.nekoton.transport`)
 - `Transport` - Blockchain communication interface
 - Support for various transport protocols (GQL, JRPC, Proto)
 

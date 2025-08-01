@@ -1,7 +1,7 @@
-package com.broxus.nekoton.abi
+package com.mazekine.nekoton.abi
 
-import com.broxus.nekoton.crypto.PublicKey
-import com.broxus.nekoton.models.*
+import com.mazekine.nekoton.crypto.PublicKey
+import com.mazekine.nekoton.models.*
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 
