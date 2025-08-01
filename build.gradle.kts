@@ -14,17 +14,24 @@ repositories {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(23))
+        vendor.set(JvmVendorSpec.ADOPTIUM)
     }
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(23)
     
     compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
         freeCompilerArgs.add("-Xjsr305=strict")
         freeCompilerArgs.add("-Xcontext-receivers")
     }
+}
+
+// Ensure Java compile target matches Kotlin target
+tasks.withType<JavaCompile> {
+    options.release.set(21)
 }
 
 dependencies {
@@ -95,17 +102,6 @@ tasks.test {
     useJUnitPlatform()
 }
 
-tasks.compileKotlin {
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-}
-
-tasks.compileTestKotlin {
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-}
 
 publishing {
     publications {
