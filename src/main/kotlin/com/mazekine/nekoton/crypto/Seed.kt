@@ -296,18 +296,18 @@ private fun intToBytes(value: Int): ByteArray {
 }
 
 /**
- * Simplified BIP39 wordlist (first 100 words for demonstration).
- * In a real implementation, this would be the complete 2048-word BIP39 wordlist.
+ * Complete BIP39 wordlist loaded from resource file.
+ * Contains all 2048 words from the official BIP39 English wordlist.
  */
-private val BIP39_WORDLIST = listOf(
-    "abandon", "ability", "able", "about", "above", "absent", "absorb", "abstract", "absurd", "abuse",
-    "access", "accident", "account", "accuse", "achieve", "acid", "acoustic", "acquire", "across", "act",
-    "action", "actor", "actress", "actual", "adapt", "add", "addict", "address", "adjust", "admit",
-    "adult", "advance", "advice", "aerobic", "affair", "afford", "afraid", "again", "against", "age",
-    "agent", "agree", "ahead", "aim", "air", "airport", "aisle", "alarm", "album", "alcohol",
-    "alert", "alien", "all", "alley", "allow", "almost", "alone", "alpha", "already", "also",
-    "alter", "always", "amateur", "amazing", "among", "amount", "amused", "analyst", "anchor", "ancient",
-    "anger", "angle", "angry", "animal", "ankle", "announce", "annual", "another", "answer", "antenna",
-    "antique", "anxiety", "any", "apart", "apology", "appear", "apple", "approve", "april", "arch",
-    "arctic", "area", "arena", "argue", "arm", "armed", "armor", "army", "around", "arrange"
-)
+private val BIP39_WORDLIST: List<String> by lazy {
+    val resourceStream = object {}.javaClass.getResourceAsStream("/bip39-wordlist.txt")
+        ?: throw IllegalStateException("Could not load BIP39 wordlist from resources")
+    
+    resourceStream.bufferedReader().use { reader ->
+        reader.readLines().filter { it.isNotBlank() }
+    }.also { wordlist ->
+        require(wordlist.size == 2048) { 
+            "BIP39 wordlist must contain exactly 2048 words, found ${wordlist.size}" 
+        }
+    }
+}
