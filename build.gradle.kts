@@ -65,6 +65,32 @@ dependencies {
     testImplementation("io.mockk:mockk:1.13.12")
 }
 
+// Add Rust compilation task
+tasks.register<Exec>("buildRustLibrary") {
+    workingDir = file("nekoton-jni")
+    commandLine("cargo", "build", "--release")
+    
+    inputs.dir("nekoton-jni/src")
+    inputs.file("nekoton-jni/Cargo.toml")
+    outputs.file("nekoton-jni/target/release/libnekoton_jni.so")
+}
+
+tasks.named("compileKotlin") {
+    dependsOn("buildRustLibrary")
+}
+
+// Copy native library to resources
+tasks.register<Copy>("copyNativeLibrary") {
+    dependsOn("buildRustLibrary")
+    from("nekoton-jni/target/release")
+    include("libnekoton_jni.so", "libnekoton_jni.dylib", "nekoton_jni.dll")
+    into("src/main/resources")
+}
+
+tasks.named("processResources") {
+    dependsOn("copyNativeLibrary")
+}
+
 tasks.test {
     useJUnitPlatform()
 }

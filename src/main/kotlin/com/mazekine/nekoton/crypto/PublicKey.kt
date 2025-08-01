@@ -1,5 +1,6 @@
 package com.mazekine.nekoton.crypto
 
+import com.mazekine.nekoton.Native
 import com.ionspin.kotlin.bignum.integer.BigInteger
 import kotlinx.serialization.Serializable
 import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
@@ -73,18 +74,23 @@ data class PublicKey(
      */
     fun verifySignature(data: ByteArray, signature: Signature, signatureId: Int? = null): Boolean {
         return try {
-            val publicKeyParams = Ed25519PublicKeyParameters(keyBytes, 0)
-            val signer = Ed25519Signer()
-            signer.init(false, publicKeyParams)
-            
-            val dataToVerify = if (signatureId != null) {
-                extendSignatureWithId(data, signatureId)
+            if (Native.isInitialized()) {
+                val sigId = signatureId?.toLong() ?: 0L
+                Native.verifySignature(keyBytes, data, signature.toBytes(), sigId)
             } else {
-                data
+                val publicKeyParams = Ed25519PublicKeyParameters(keyBytes, 0)
+                val signer = Ed25519Signer()
+                signer.init(false, publicKeyParams)
+                
+                val dataToVerify = if (signatureId != null) {
+                    extendSignatureWithId(data, signatureId)
+                } else {
+                    data
+                }
+                
+                signer.update(dataToVerify, 0, dataToVerify.size)
+                signer.verifySignature(signature.toBytes())
             }
-            
-            signer.update(dataToVerify, 0, dataToVerify.size)
-            signer.verifySignature(signature.toBytes())
         } catch (e: Exception) {
             false
         }
