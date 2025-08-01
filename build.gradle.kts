@@ -3,7 +3,6 @@ plugins {
     kotlin("plugin.serialization") version "2.0.21"
     `java-library`
     `maven-publish`
-    id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
 }
 
 group = "com.mazekine"
@@ -28,6 +27,11 @@ kotlin {
         freeCompilerArgs.add("-Xjsr305=strict")
         freeCompilerArgs.add("-Xcontext-receivers")
     }
+}
+
+// Ensure Java compile target matches Kotlin target
+tasks.withType<JavaCompile> {
+    options.release.set(21)
 }
 
 dependencies {
