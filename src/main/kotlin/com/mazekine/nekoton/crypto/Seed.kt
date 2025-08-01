@@ -1,5 +1,6 @@
 package com.mazekine.nekoton.crypto
 
+import com.mazekine.nekoton.Native
 import kotlinx.serialization.Serializable
 import java.security.MessageDigest
 import java.security.SecureRandom
@@ -160,13 +161,18 @@ data class Bip39Seed private constructor(private val seedWords: List<String>) : 
         val derivationPath = path ?: DEFAULT_PATH
         val phrase = seedWords.joinToString(" ")
         
-        // Generate seed from mnemonic
-        val seed = generateSeedFromMnemonic(phrase)
-        
-        // Derive key using the path
-        val derivedKey = deriveKeyFromPath(seed, derivationPath)
-        
-        return KeyPair(derivedKey)
+        return if (Native.isInitialized()) {
+            val secretBytes = Native.deriveBip39KeyPair(phrase, derivationPath)
+            KeyPair(secretBytes)
+        } else {
+            // Generate seed from mnemonic
+            val seed = generateSeedFromMnemonic(phrase)
+            
+            // Derive key using the path
+            val derivedKey = deriveKeyFromPath(seed, derivationPath)
+            
+            KeyPair(derivedKey)
+        }
     }
 
     override fun toString(): String {
@@ -187,10 +193,15 @@ data class Bip39Seed private constructor(private val seedWords: List<String>) : 
          * @return New Bip39Seed instance
          */
         fun generate(): Bip39Seed {
-            val entropy = ByteArray(16) // 128 bits for 12 words
-            SecureRandom().nextBytes(entropy)
-            val words = generateWords(entropy)
-            return Bip39Seed(words)
+            return if (Native.isInitialized()) {
+                val phrase = Native.generateBip39Mnemonic(WORD_COUNT.toLong())
+                Bip39Seed(phrase)
+            } else {
+                val entropy = ByteArray(16) // 128 bits for 12 words
+                SecureRandom().nextBytes(entropy)
+                val words = generateWords(entropy)
+                Bip39Seed(words)
+            }
         }
 
         /**

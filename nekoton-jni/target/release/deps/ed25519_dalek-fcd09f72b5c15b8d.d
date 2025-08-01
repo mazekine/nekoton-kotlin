@@ -1,0 +1,13 @@
+/home/ubuntu/nekoton-kotlin/nekoton-jni/target/release/deps/libed25519_dalek-fcd09f72b5c15b8d.rmeta: /home/ubuntu/.cargo/git/checkouts/ed25519-dalek-2226d3fc278c2e8b/e5d68fd/src/lib.rs /home/ubuntu/.cargo/git/checkouts/ed25519-dalek-2226d3fc278c2e8b/e5d68fd/src/constants.rs /home/ubuntu/.cargo/git/checkouts/ed25519-dalek-2226d3fc278c2e8b/e5d68fd/src/errors.rs /home/ubuntu/.cargo/git/checkouts/ed25519-dalek-2226d3fc278c2e8b/e5d68fd/src/keypair.rs /home/ubuntu/.cargo/git/checkouts/ed25519-dalek-2226d3fc278c2e8b/e5d68fd/src/public.rs /home/ubuntu/.cargo/git/checkouts/ed25519-dalek-2226d3fc278c2e8b/e5d68fd/src/secret.rs /home/ubuntu/.cargo/git/checkouts/ed25519-dalek-2226d3fc278c2e8b/e5d68fd/src/signature.rs
+
+/home/ubuntu/nekoton-kotlin/nekoton-jni/target/release/deps/libed25519_dalek-fcd09f72b5c15b8d.rlib: /home/ubuntu/.cargo/git/checkouts/ed25519-dalek-2226d3fc278c2e8b/e5d68fd/src/lib.rs /home/ubuntu/.cargo/git/checkouts/ed25519-dalek-2226d3fc278c2e8b/e5d68fd/src/constants.rs /home/ubuntu/.cargo/git/checkouts/ed25519-dalek-2226d3fc278c2e8b/e5d68fd/src/errors.rs /home/ubuntu/.cargo/git/checkouts/ed25519-dalek-2226d3fc278c2e8b/e5d68fd/src/keypair.rs /home/ubuntu/.cargo/git/checkouts/ed25519-dalek-2226d3fc278c2e8b/e5d68fd/src/public.rs /home/ubuntu/.cargo/git/checkouts/ed25519-dalek-2226d3fc278c2e8b/e5d68fd/src/secret.rs /home/ubuntu/.cargo/git/checkouts/ed25519-dalek-2226d3fc278c2e8b/e5d68fd/src/signature.rs
+
+/home/ubuntu/nekoton-kotlin/nekoton-jni/target/release/deps/ed25519_dalek-fcd09f72b5c15b8d.d: /home/ubuntu/.cargo/git/checkouts/ed25519-dalek-2226d3fc278c2e8b/e5d68fd/src/lib.rs /home/ubuntu/.cargo/git/checkouts/ed25519-dalek-2226d3fc278c2e8b/e5d68fd/src/constants.rs /home/ubuntu/.cargo/git/checkouts/ed25519-dalek-2226d3fc278c2e8b/e5d68fd/src/errors.rs /home/ubuntu/.cargo/git/checkouts/ed25519-dalek-2226d3fc278c2e8b/e5d68fd/src/keypair.rs /home/ubuntu/.cargo/git/checkouts/ed25519-dalek-2226d3fc278c2e8b/e5d68fd/src/public.rs /home/ubuntu/.cargo/git/checkouts/ed25519-dalek-2226d3fc278c2e8b/e5d68fd/src/secret.rs /home/ubuntu/.cargo/git/checkouts/ed25519-dalek-2226d3fc278c2e8b/e5d68fd/src/signature.rs
+
+/home/ubuntu/.cargo/git/checkouts/ed25519-dalek-2226d3fc278c2e8b/e5d68fd/src/lib.rs:
+/home/ubuntu/.cargo/git/checkouts/ed25519-dalek-2226d3fc278c2e8b/e5d68fd/src/constants.rs:
+/home/ubuntu/.cargo/git/checkouts/ed25519-dalek-2226d3fc278c2e8b/e5d68fd/src/errors.rs:
+/home/ubuntu/.cargo/git/checkouts/ed25519-dalek-2226d3fc278c2e8b/e5d68fd/src/keypair.rs:
+/home/ubuntu/.cargo/git/checkouts/ed25519-dalek-2226d3fc278c2e8b/e5d68fd/src/public.rs:
+/home/ubuntu/.cargo/git/checkouts/ed25519-dalek-2226d3fc278c2e8b/e5d68fd/src/secret.rs:
+/home/ubuntu/.cargo/git/checkouts/ed25519-dalek-2226d3fc278c2e8b/e5d68fd/src/signature.rs:

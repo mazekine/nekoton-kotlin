@@ -1,0 +1,12 @@
+/home/ubuntu/nekoton-kotlin/nekoton-jni/target/release/deps/libprost-c59512737382d346.rmeta: /home/ubuntu/.cargo/registry/src/index.crates.io-6f17d22bba15001f/prost-0.11.9/src/lib.rs /home/ubuntu/.cargo/registry/src/index.crates.io-6f17d22bba15001f/prost-0.11.9/src/error.rs /home/ubuntu/.cargo/registry/src/index.crates.io-6f17d22bba15001f/prost-0.11.9/src/message.rs /home/ubuntu/.cargo/registry/src/index.crates.io-6f17d22bba15001f/prost-0.11.9/src/types.rs /home/ubuntu/.cargo/registry/src/index.crates.io-6f17d22bba15001f/prost-0.11.9/src/encoding.rs /home/ubuntu/.cargo/registry/src/index.crates.io-6f17d22bba15001f/prost-0.11.9/src/../README.md
+
+/home/ubuntu/nekoton-kotlin/nekoton-jni/target/release/deps/libprost-c59512737382d346.rlib: /home/ubuntu/.cargo/registry/src/index.crates.io-6f17d22bba15001f/prost-0.11.9/src/lib.rs /home/ubuntu/.cargo/registry/src/index.crates.io-6f17d22bba15001f/prost-0.11.9/src/error.rs /home/ubuntu/.cargo/registry/src/index.crates.io-6f17d22bba15001f/prost-0.11.9/src/message.rs /home/ubuntu/.cargo/registry/src/index.crates.io-6f17d22bba15001f/prost-0.11.9/src/types.rs /home/ubuntu/.cargo/registry/src/index.crates.io-6f17d22bba15001f/prost-0.11.9/src/encoding.rs /home/ubuntu/.cargo/registry/src/index.crates.io-6f17d22bba15001f/prost-0.11.9/src/../README.md
+
+/home/ubuntu/nekoton-kotlin/nekoton-jni/target/release/deps/prost-c59512737382d346.d: /home/ubuntu/.cargo/registry/src/index.crates.io-6f17d22bba15001f/prost-0.11.9/src/lib.rs /home/ubuntu/.cargo/registry/src/index.crates.io-6f17d22bba15001f/prost-0.11.9/src/error.rs /home/ubuntu/.cargo/registry/src/index.crates.io-6f17d22bba15001f/prost-0.11.9/src/message.rs /home/ubuntu/.cargo/registry/src/index.crates.io-6f17d22bba15001f/prost-0.11.9/src/types.rs /home/ubuntu/.cargo/registry/src/index.crates.io-6f17d22bba15001f/prost-0.11.9/src/encoding.rs /home/ubuntu/.cargo/registry/src/index.crates.io-6f17d22bba15001f/prost-0.11.9/src/../README.md
+
+/home/ubuntu/.cargo/registry/src/index.crates.io-6f17d22bba15001f/prost-0.11.9/src/lib.rs:
+/home/ubuntu/.cargo/registry/src/index.crates.io-6f17d22bba15001f/prost-0.11.9/src/error.rs:
+/home/ubuntu/.cargo/registry/src/index.crates.io-6f17d22bba15001f/prost-0.11.9/src/message.rs:
+/home/ubuntu/.cargo/registry/src/index.crates.io-6f17d22bba15001f/prost-0.11.9/src/types.rs:
+/home/ubuntu/.cargo/registry/src/index.crates.io-6f17d22bba15001f/prost-0.11.9/src/encoding.rs:
+/home/ubuntu/.cargo/registry/src/index.crates.io-6f17d22bba15001f/prost-0.11.9/src/../README.md:

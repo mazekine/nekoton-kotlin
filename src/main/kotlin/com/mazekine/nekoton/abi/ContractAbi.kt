@@ -1,5 +1,6 @@
 package com.mazekine.nekoton.abi
 
+import com.mazekine.nekoton.Native
 import com.mazekine.nekoton.crypto.PublicKey
 import com.mazekine.nekoton.models.*
 import kotlinx.serialization.Contextual
@@ -7,6 +8,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.decodeFromString
 import java.io.File
 
 /**
@@ -27,6 +29,20 @@ data class ContractAbi(
     val events: Map<String, EventAbi>,
     val data: Map<String, AbiParam> = emptyMap()
 ) {
+    private var nativeHandle: Long = 0
+    private var isNativeInitialized = false
+    
+    init {
+        if (Native.isInitialized()) {
+            try {
+                // We would need the original JSON for native parsing
+                // For now, just mark as not initialized
+                isNativeInitialized = false
+            } catch (e: Exception) {
+                isNativeInitialized = false
+            }
+        }
+    }
     /**
      * Creates a ContractAbi from JSON string.
      * 
@@ -37,7 +53,16 @@ data class ContractAbi(
         parseAbiJson(abiJson).functions,
         parseAbiJson(abiJson).events,
         parseAbiJson(abiJson).data
-    )
+    ) {
+        if (Native.isInitialized()) {
+            try {
+                nativeHandle = Native.parseAbi(abiJson)
+                isNativeInitialized = nativeHandle != 0L
+            } catch (e: Exception) {
+                isNativeInitialized = false
+            }
+        }
+    }
 
     /**
      * Gets a function ABI by name.
@@ -45,7 +70,26 @@ data class ContractAbi(
      * @param name The function name
      * @return FunctionAbi instance or null if not found
      */
-    fun getFunction(name: String): FunctionAbi? = functions[name]
+    fun getFunction(name: String): FunctionAbi? {
+        return if (isNativeInitialized) {
+            try {
+                val functionNamesBytes = Native.getAbiFunctionNames(nativeHandle)
+                val functionNamesJson = String(functionNamesBytes)
+                val functionNames = Json.decodeFromString<List<String>>(functionNamesJson)
+                
+                if (functionNames.contains(name)) {
+                    // For now, return the regular function ABI since NativeFunctionAbi doesn't extend FunctionAbi
+                    functions[name]
+                } else {
+                    null
+                }
+            } catch (e: Exception) {
+                functions[name]
+            }
+        } else {
+            functions[name]
+        }
+    }
 
     /**
      * Gets an event ABI by name.

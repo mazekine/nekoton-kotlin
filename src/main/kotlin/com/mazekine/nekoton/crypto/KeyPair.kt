@@ -1,5 +1,6 @@
 package com.mazekine.nekoton.crypto
 
+import com.mazekine.nekoton.Native
 import kotlinx.serialization.Serializable
 import org.bouncycastle.crypto.generators.Ed25519KeyPairGenerator
 import org.bouncycastle.crypto.params.Ed25519KeyGenerationParameters
@@ -31,7 +32,12 @@ data class KeyPair(
      * @param secretBytes The 32-byte private key
      */
     constructor(secretBytes: ByteArray) : this(
-        PublicKey(Ed25519PrivateKeyParameters(secretBytes, 0).generatePublicKey().encoded)
+        if (Native.isInitialized()) {
+            val publicBytes = Native.publicKeyFromSecret(secretBytes)
+            PublicKey(publicBytes)
+        } else {
+            PublicKey(Ed25519PrivateKeyParameters(secretBytes, 0).generatePublicKey().encoded)
+        }
     ) {
         this.privateKey = Ed25519PrivateKeyParameters(secretBytes, 0)
     }
@@ -58,22 +64,28 @@ data class KeyPair(
      * @return The signature
      */
     fun sign(data: ByteArray, signatureId: Int? = null): Signature {
-        val signer = Ed25519Signer()
-        signer.init(true, privateKey)
-        
-        // Hash the data first (similar to Python implementation)
-        val hashedData = MessageDigest.getInstance("SHA-256").digest(data)
-        
-        val dataToSign = if (signatureId != null) {
-            extendSignatureWithId(hashedData, signatureId)
+        return if (Native.isInitialized()) {
+            val sigId = signatureId?.toLong() ?: 0L
+            val signatureBytes = Native.signData(privateKey.encoded, data, sigId)
+            Signature(signatureBytes)
         } else {
-            hashedData
+            val signer = Ed25519Signer()
+            signer.init(true, privateKey)
+            
+            // Hash the data first (similar to Python implementation)
+            val hashedData = MessageDigest.getInstance("SHA-256").digest(data)
+            
+            val dataToSign = if (signatureId != null) {
+                extendSignatureWithId(hashedData, signatureId)
+            } else {
+                hashedData
+            }
+            
+            signer.update(dataToSign, 0, dataToSign.size)
+            val signatureBytes = signer.generateSignature()
+            
+            Signature(signatureBytes)
         }
-        
-        signer.update(dataToSign, 0, dataToSign.size)
-        val signatureBytes = signer.generateSignature()
-        
-        return Signature(signatureBytes)
     }
 
     /**
@@ -135,14 +147,19 @@ data class KeyPair(
          * @return A new KeyPair instance
          */
         fun generate(): KeyPair {
-            val keyPairGenerator = Ed25519KeyPairGenerator()
-            keyPairGenerator.init(Ed25519KeyGenerationParameters(SecureRandom()))
-            
-            val keyPair = keyPairGenerator.generateKeyPair()
-            val privateKey = keyPair.private as Ed25519PrivateKeyParameters
-            val publicKeyBytes = (keyPair.public as Ed25519PublicKeyParameters).encoded
-            
-            return KeyPair(privateKey, PublicKey(publicKeyBytes))
+            return if (Native.isInitialized()) {
+                val secretBytes = Native.generateKeyPair()
+                KeyPair(secretBytes)
+            } else {
+                val keyPairGenerator = Ed25519KeyPairGenerator()
+                keyPairGenerator.init(Ed25519KeyGenerationParameters(SecureRandom()))
+                
+                val keyPair = keyPairGenerator.generateKeyPair()
+                val privateKey = keyPair.private as Ed25519PrivateKeyParameters
+                val publicKeyBytes = (keyPair.public as Ed25519PublicKeyParameters).encoded
+                
+                KeyPair(privateKey, PublicKey(publicKeyBytes))
+            }
         }
 
         /**
