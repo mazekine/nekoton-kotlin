@@ -11,6 +11,7 @@ This library provides comprehensive Kotlin bindings that mimic the structure and
 - **🔒 Complete Crypto Support**: Native Ed25519 operations with BouncyCastle fallbacks
 - **🏗️ Smart Contract ABI**: Native ABI parsing, encoding, and decoding
 - **🌐 Multiple Transports**: Support for GraphQL, JSON-RPC, and Proto transports
+- **🪙 [Jetton API](src/main/kotlin/com/mazekine/nekoton/jetton)**: TIP3 token balance queries and transfers
 - **⚡ Modern Kotlin**: Built with Kotlin 2.0.21, leveraging coroutines, null safety, and data classes
 - **🛡️ Type Safety**: Comprehensive type definitions for all blockchain entities
 - **📚 Full Documentation**: Complete KDoc documentation with usage examples
@@ -305,7 +306,7 @@ See the [`examples/`](examples/) directory for comprehensive usage examples:
 - **[BasicWallet.kt](examples/BasicWallet.kt)** - Simple wallet operations
 - **[SmartContractInteraction.kt](examples/SmartContractInteraction.kt)** - Contract method calls
 - **[HDWallet.kt](examples/HDWallet.kt)** - Hierarchical deterministic wallets
-- **[TokenOperations.kt](examples/TokenOperations.kt)** - TIP3 token handling
+- **[TokenOperations.kt](examples/TokenOperations.kt)** - TIP3 token handling with [Jetton API](src/main/kotlin/com/mazekine/nekoton/jetton)
 - **[EventMonitoring.kt](examples/EventMonitoring.kt)** - Blockchain event monitoring
 
 ## Configuration

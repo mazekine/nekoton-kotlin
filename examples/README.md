@@ -6,9 +6,8 @@ This directory contains practical examples demonstrating how to use Nekoton Kotl
 
 - [`BasicWallet.kt`](BasicWallet.kt) - Simple wallet operations (send/receive)
 - [`SmartContractInteraction.kt`](SmartContractInteraction.kt) - Calling smart contract methods
-- [`TokenOperations.kt`](TokenOperations.kt) - Working with TIP3 tokens
-- [`MultiSigWallet.kt`](MultiSigWallet.kt) - Multi-signature wallet operations
-- [`EventMonitoring.kt`](EventMonitoring.kt) - Monitoring blockchain events
+- [`TokenOperations.kt`](TokenOperations.kt) - Query jetton balances and transfer tokens using [Jetton API](../src/main/kotlin/com/mazekine/nekoton/jetton)
+- [`EventMonitoring.kt`](EventMonitoring.kt) - Monitor account state and transactions in real time
 - [`HDWallet.kt`](HDWallet.kt) - Hierarchical deterministic wallet
 
 ## Running Examples
