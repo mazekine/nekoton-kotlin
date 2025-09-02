@@ -858,6 +858,7 @@ dependencies = [
  "hex",
  "jni",
  "nekoton",
+ "nekoton-jetton",
  "once_cell",
  "rand",
  "serde_json",

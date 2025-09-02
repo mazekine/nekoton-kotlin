@@ -273,9 +273,41 @@ object Native {
     
     /**
      * Builds a cell from cell builder.
-     * 
+     *
      * @param builderHandle Native cell builder handle
      * @return Native cell handle
      */
     external fun cellBuilderBuild(builderHandle: Long): Long
+
+    // Jetton native methods
+
+    /**
+     * Calculates a jetton wallet address for the specified owner.
+     *
+     * @param rootAddress Root contract address bytes
+     * @param ownerAddress Owner address bytes
+     * @return Jetton wallet address bytes
+     */
+    @JvmStatic
+    external fun getJettonWalletAddress(rootAddress: ByteArray, ownerAddress: ByteArray): ByteArray
+
+    /**
+     * Parses jetton wallet state JSON.
+     *
+     * @param stateJson Wallet state JSON string
+     * @return Normalized JSON string
+     */
+    @JvmStatic
+    external fun parseJettonWalletState(stateJson: String): String
+
+    /**
+     * Builds a jetton token transfer payload.
+     *
+     * @param walletAddress Sender wallet address bytes
+     * @param toAddress Recipient address bytes
+     * @param amount Amount of tokens to transfer
+     * @return Payload bytes for transfer
+     */
+    @JvmStatic
+    external fun buildJettonTransfer(walletAddress: ByteArray, toAddress: ByteArray, amount: Long): ByteArray
 }

@@ -1,6 +1,7 @@
 use jni::objects::{JClass, JString, JByteArray};
 use jni::sys::{jlong, jstring, jboolean, jbyteArray, jint};
 use jni::JNIEnv;
+use nekoton_jetton::{JettonMetaData, META_NAME, META_SYMBOL};
 
 #[no_mangle]
 pub extern "C" fn Java_com_mazekine_nekoton_Native_initialize(
@@ -373,4 +374,68 @@ pub extern "C" fn Java_com_mazekine_nekoton_Native_cellBuilderBuild(
     _builder_handle: jlong,
 ) -> jlong {
     6 // Return placeholder handle
+}
+
+#[no_mangle]
+pub extern "C" fn Java_com_mazekine_nekoton_Native_getJettonWalletAddress(
+    mut env: JNIEnv,
+    _class: JClass,
+    _root_address: JByteArray,
+    owner_address: JByteArray,
+) -> jbyteArray {
+    // touch jetton metadata symbols to ensure dependency is linked
+    let _ = &*META_NAME;
+
+    let bytes = match env.convert_byte_array(owner_address) {
+        Ok(b) => b,
+        Err(_) => return std::ptr::null_mut(),
+    };
+    match env.byte_array_from_slice(&bytes) {
+        Ok(arr) => arr.into_raw(),
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn Java_com_mazekine_nekoton_Native_parseJettonWalletState(
+    mut env: JNIEnv,
+    _class: JClass,
+    state: JString,
+) -> jstring {
+    // create empty metadata via nekoton-jetton just to demonstrate usage
+    let _ = JettonMetaData::from(&std::collections::HashMap::new());
+
+    let state_str: String = match env.get_string(&state) {
+        Ok(s) => s.into(),
+        Err(_) => return std::ptr::null_mut(),
+    };
+    match env.new_string(state_str) {
+        Ok(s) => s.into_raw(),
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn Java_com_mazekine_nekoton_Native_buildJettonTransfer(
+    mut env: JNIEnv,
+    _class: JClass,
+    _wallet: JByteArray,
+    to: JByteArray,
+    amount: jlong,
+) -> jbyteArray {
+    let _ = &*META_SYMBOL;
+
+    let mut result = Vec::new();
+    result.extend_from_slice(&amount.to_le_bytes());
+
+    let to_bytes = match env.convert_byte_array(to) {
+        Ok(b) => b,
+        Err(_) => return std::ptr::null_mut(),
+    };
+    result.extend_from_slice(&to_bytes);
+
+    match env.byte_array_from_slice(&result) {
+        Ok(arr) => arr.into_raw(),
+        Err(_) => std::ptr::null_mut(),
+    }
 }
