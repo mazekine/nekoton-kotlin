@@ -45,6 +45,13 @@ class JettonWallet(val root: Address, val owner: Address, var balance: Long) {
     }
 }
 
+/**
+ * Represents normalized jetton wallet state returned by the native library or JSON parser.
+ *
+ * @property balance Jetton balance in smallest units
+ * @property owner Wallet owner's raw address string
+ * @property root Jetton root contract raw address string
+ */
 @Serializable
 data class JettonWalletState(
     val balance: Long,
