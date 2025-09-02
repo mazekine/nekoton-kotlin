@@ -1,8 +1,12 @@
+import org.gradle.jvm.tasks.Jar
+
 plugins {
     kotlin("jvm") version "2.0.21"
     kotlin("plugin.serialization") version "2.0.21"
     `java-library`
     `maven-publish`
+    id("org.jetbrains.dokka") version "1.9.20"
+    signing
 }
 
 group = "com.mazekine"
@@ -102,11 +106,29 @@ tasks.test {
     useJUnitPlatform()
 }
 
+// Documentation and source packaging
+tasks.dokkaJavadoc.configure {
+    outputDirectory.set(buildDir.resolve("dokkaJavadoc"))
+}
+
+val javadocJar by tasks.registering(Jar::class) {
+    dependsOn(tasks.dokkaJavadoc)
+    archiveClassifier.set("javadoc")
+    from(tasks.dokkaJavadoc.map { it.outputDirectory })
+}
+
+val sourcesJar by tasks.registering(Jar::class) {
+    archiveClassifier.set("sources")
+    from(sourceSets.main.get().allSource)
+}
+
 
 publishing {
     publications {
         create<MavenPublication>("maven") {
             from(components["java"])
+            artifact(sourcesJar)
+            artifact(javadocJar)
             
             pom {
                 name.set("Nekoton Kotlin")
@@ -136,4 +158,20 @@ publishing {
             }
         }
     }
+    repositories {
+        maven {
+            name = "sonatype"
+            val releasesRepoUrl = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+            val snapshotsRepoUrl = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+            url = if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
+            credentials {
+                username = findProperty("sonatypeUsername") as String? ?: System.getenv("SONATYPE_USERNAME")
+                password = findProperty("sonatypePassword") as String? ?: System.getenv("SONATYPE_PASSWORD")
+            }
+        }
+    }
+}
+
+signing {
+    sign(publishing.publications["maven"])
 }
