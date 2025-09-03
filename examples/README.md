@@ -20,8 +20,9 @@ This directory contains practical examples demonstrating how to use Nekoton Kotl
 ## Configuration
 
 All examples use Tycho testnet by default:
-- RPC: https://rpc-testnet.tychoprotocol.com/proto
+- JSON-RPC: https://rpc-testnet.tychoprotocol.com/
+- Protobuf: https://rpc-testnet.tychoprotocol.com/proto
 - Currency: TYCHO (9 decimals)
 - Explorer: https://testnet.tychoprotocol.com
 
-To use mainnet, update the transport URLs in each example.
+For other networks (e.g., TON or Everscale mainnets), update the transport URLs in each example.

@@ -18,7 +18,9 @@ class TransportTest {
     @Test
     fun testTransportConfig() {
         // Test Tycho testnet configuration constants
-        assertEquals("https://rpc-testnet.tychoprotocol.com/proto", TestConfig.TYCHO_RPC_URL)
+        assertEquals("https://mainnet.evercloud.dev/89a3b8f46a484f2ea3bdd364ddaee3a3/graphql", TestConfig.EVERCLOUD_GQL_URL)
+        assertEquals("https://rpc-testnet.tychoprotocol.com/", TestConfig.TYCHO_JRPC_URL)
+        assertEquals("https://rpc-testnet.tychoprotocol.com/proto", TestConfig.TYCHO_PROTO_URL)
         assertEquals("TYCHO", TestConfig.TYCHO_CURRENCY_SYMBOL)
         assertEquals(9, TestConfig.TYCHO_DECIMALS)
         assertEquals("https://testnet.tychoprotocol.com", TestConfig.TYCHO_EXPLORER_URL)

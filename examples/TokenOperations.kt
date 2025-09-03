@@ -14,7 +14,7 @@ import kotlinx.coroutines.runBlocking
  * - Transferring jettons using the Jetton API
  */
 class TokenOperations {
-    private val transport = JrpcTransport("https://rpc-testnet.tychoprotocol.com/proto")
+    private val transport = JrpcTransport("https://rpc-testnet.tychoprotocol.com/")
     private val jettonApi = JettonApi(transport)
 
     fun demonstrateTokenOperations() = runBlocking {

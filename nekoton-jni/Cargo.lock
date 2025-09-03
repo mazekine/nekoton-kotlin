@@ -737,6 +737,7 @@ dependencies = [
 [[package]]
 name = "nekoton"
 version = "0.13.1"
+source = "git+https://github.com/broxus/nekoton#c7bdb8816cfc540134a008be36629aeb1a1ef89a"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -782,6 +783,7 @@ dependencies = [
 [[package]]
 name = "nekoton-abi"
 version = "0.13.0"
+source = "git+https://github.com/broxus/nekoton#c7bdb8816cfc540134a008be36629aeb1a1ef89a"
 dependencies = [
  "anyhow",
  "base64",
@@ -808,6 +810,7 @@ dependencies = [
 [[package]]
 name = "nekoton-contracts"
 version = "0.13.0"
+source = "git+https://github.com/broxus/nekoton#c7bdb8816cfc540134a008be36629aeb1a1ef89a"
 dependencies = [
  "anyhow",
  "nekoton-abi",
@@ -824,6 +827,7 @@ dependencies = [
 [[package]]
 name = "nekoton-derive"
 version = "0.13.0"
+source = "git+https://github.com/broxus/nekoton#c7bdb8816cfc540134a008be36629aeb1a1ef89a"
 dependencies = [
  "either",
  "proc-macro2",
@@ -834,6 +838,7 @@ dependencies = [
 [[package]]
 name = "nekoton-jetton"
 version = "0.13.0"
+source = "git+https://github.com/broxus/nekoton#c7bdb8816cfc540134a008be36629aeb1a1ef89a"
 dependencies = [
  "anyhow",
  "lazy_static",
@@ -870,6 +875,7 @@ dependencies = [
 [[package]]
 name = "nekoton-proto"
 version = "0.1.0"
+source = "git+https://github.com/broxus/nekoton#c7bdb8816cfc540134a008be36629aeb1a1ef89a"
 dependencies = [
  "anyhow",
  "nekoton-abi",
@@ -881,6 +887,7 @@ dependencies = [
 [[package]]
 name = "nekoton-utils"
 version = "0.13.0"
+source = "git+https://github.com/broxus/nekoton#c7bdb8816cfc540134a008be36629aeb1a1ef89a"
 dependencies = [
  "anyhow",
  "base64",
