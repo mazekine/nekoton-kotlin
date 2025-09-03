@@ -1,7 +1,9 @@
 package com.mazekine.nekoton
 
 object TestConfig {
-    const val TYCHO_RPC_URL = "https://rpc-testnet.tychoprotocol.com/proto"
+    const val EVERCLOUD_GQL_URL = "https://mainnet.evercloud.dev/89a3b8f46a484f2ea3bdd364ddaee3a3/graphql"
+    const val TYCHO_JRPC_URL = "https://rpc-testnet.tychoprotocol.com/"
+    const val TYCHO_PROTO_URL = "https://rpc-testnet.tychoprotocol.com/proto"
     const val TYCHO_CURRENCY_SYMBOL = "TYCHO"
     const val TYCHO_DECIMALS = 9
     const val TYCHO_EXPLORER_URL = "https://testnet.tychoprotocol.com"

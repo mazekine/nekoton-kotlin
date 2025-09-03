@@ -59,11 +59,19 @@ object Native {
     
     /**
      * Creates a native JRPC transport instance.
-     * 
+     *
      * @param endpoint The JSON-RPC endpoint URL
      * @return Native transport handle
      */
     external fun createJrpcTransport(endpoint: String): Long
+
+    /**
+     * Creates a native Proto transport instance.
+     *
+     * @param endpoint The Protobuf endpoint URL
+     * @return Native transport handle
+     */
+    external fun createProtoTransport(endpoint: String): Long
     
     /**
      * Sends an external message through the transport.

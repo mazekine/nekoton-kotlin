@@ -17,7 +17,7 @@ import kotlinx.coroutines.delay
  * - Transaction monitoring
  */
 class BasicWallet {
-    private val transport = JrpcTransport("https://rpc-testnet.tychoprotocol.com/proto")
+    private val transport = JrpcTransport("https://rpc-testnet.tychoprotocol.com/")
     
     fun demonstrateBasicOperations() = runBlocking {
         println("=== Basic Wallet Operations ===")

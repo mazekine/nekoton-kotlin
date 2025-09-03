@@ -17,7 +17,7 @@ import kotlinx.coroutines.runBlocking
  * - Event monitoring
  */
 class SmartContractInteraction {
-    private val transport = JrpcTransport("https://rpc-testnet.tychoprotocol.com/proto")
+    private val transport = JrpcTransport("https://rpc-testnet.tychoprotocol.com/")
     
     // Sample TIP3 Token contract ABI
     private val tokenAbi = """

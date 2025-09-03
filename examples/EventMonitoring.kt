@@ -15,7 +15,7 @@ import kotlinx.coroutines.delay
  * and prints updates in real time.
  */
 class EventMonitoring {
-    private val transport = JrpcTransport("https://rpc-testnet.tychoprotocol.com/proto")
+    private val transport = JrpcTransport("https://rpc-testnet.tychoprotocol.com/")
 
     fun monitor(address: String) = runBlocking {
         val addr = Address(address)

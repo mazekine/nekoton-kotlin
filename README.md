@@ -1,8 +1,8 @@
 # Nekoton Kotlin
 
-Kotlin bindings for [Nekoton](https://github.com/broxus/nekoton) - Broxus SDK with TIP3 wallets support.
+Kotlin bindings for [Nekoton](https://github.com/broxus/nekoton) – a universal TVM library covering TON, Everscale, Venom, and any Tycho‑based networks, with TIP3 wallet support.
 
-This library provides comprehensive Kotlin bindings that mimic the structure and functionality of [nekoton-python](https://github.com/broxus/nekoton-python), enabling developers to interact with the TON/Everscale blockchain using modern Kotlin features and **native Rust performance**.
+This library provides comprehensive Kotlin bindings that mimic the structure and functionality of [nekoton-python](https://github.com/broxus/nekoton-python), enabling developers to interact with TVM blockchains using modern Kotlin features and **native Rust performance**.
 
 ## Features
 
@@ -59,8 +59,8 @@ println("Amount: ${tokens.toTokens()} tokens")
 ### Connect to Blockchain
 
 ```kotlin
-// Connect to Tycho testnet
-val transport = GqlTransport("https://rpc-testnet.tychoprotocol.com/proto")
+// Connect to Tycho testnet using Protobuf transport
+val transport = ProtoTransport("https://rpc-testnet.tychoprotocol.com/proto")
 
 // Check if transport is connected
 if (transport.isConnected()) {
@@ -80,7 +80,7 @@ if (transport.isConnected()) {
 import kotlinx.coroutines.runBlocking
 
 // Create transport and key pair
-val transport = GqlTransport("https://rpc-testnet.tychoprotocol.com/proto")
+val transport = ProtoTransport("https://rpc-testnet.tychoprotocol.com/proto")
 val senderKeyPair = KeyPair.generate()
 val recipientAddress = Address("0:abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890")
 
@@ -210,25 +210,28 @@ val functionBySignature = complexAbi.getFunctionBySignature("0x12345678")
 
 ```kotlin
 // Multiple transport types
-val gqlTransport = GqlTransport("https://rpc-testnet.tychoprotocol.com/proto")
-val jrpcTransport = JrpcTransport("https://rpc-testnet.tychoprotocol.com/rpc")
+val gqlTransport = GqlTransport("https://mainnet.evercloud.dev/89a3b8f46a484f2ea3bdd364ddaee3a3/graphql")
+val jrpcTransport = JrpcTransport("https://rpc-testnet.tychoprotocol.com/")
+val protoTransport = ProtoTransport("https://rpc-testnet.tychoprotocol.com/proto")
+
+val transport: Transport = protoTransport
 
 runBlocking {
     // Get blockchain configuration
     val config = transport.getBlockchainConfig()
     println("Global ID: ${config.globalId}")
-    
+
     // Get account transactions
     val transactions = transport.getTransactions(address, fromLt = null, count = 10)
     transactions.forEach { tx ->
         println("Transaction: ${tx.id}, Amount: ${tx.totalFees}")
     }
-    
+
     // Subscribe to account updates
     transport.subscribeToAccountState(address).collect { accountState ->
         println("Account updated: ${accountState.balance}")
     }
-    
+
     // Get latest block info
     val latestBlock = transport.getLatestBlock()
     println("Latest block: ${latestBlock.seqno}")
@@ -258,8 +261,9 @@ The library is organized into several key packages with **native Rust integratio
 - `EventAbi` - **Native** event data decoding
 
 ### Transport (`com.mazekine.nekoton.transport`)
-- `GqlTransport` - **Native GraphQL** transport for blockchain communication
-- `JrpcTransport` - **Native JSON-RPC** transport
+- `GqlTransport` - **Legacy GraphQL** transport for blockchain communication
+- `JrpcTransport` - **JSON-RPC** transport
+- `ProtoTransport` - **Protobuf** transport (default)
 - Real network operations with connection pooling and error handling
 
 ### Native Integration (`com.mazekine.nekoton.Native`)
@@ -314,16 +318,16 @@ See the [`examples/`](examples/) directory for comprehensive usage examples:
 ### Testnet Configuration (Default)
 
 ```kotlin
-val transport = GqlTransport("https://rpc-testnet.tychoprotocol.com/proto")
+val transport = ProtoTransport("https://rpc-testnet.tychoprotocol.com/proto")
 // Currency: TYCHO, Decimals: 9
 // Explorer: https://testnet.tychoprotocol.com
 ```
 
-### Mainnet Configuration
+### Other Network Configuration
 
 ```kotlin
-val transport = GqlTransport("https://rpc.tychoprotocol.com/proto")
-// Update URLs for production use
+val transport = ProtoTransport("<your-network-endpoint>")
+// Replace with the RPC URL for TON, Everscale, Venom, or another Tycho‑based network
 ```
 
 ## Documentation
@@ -414,7 +418,7 @@ source ~/.cargo/env
 **Problem**: Transport connection timeouts
 ```kotlin
 // Increase timeout or check network connectivity
-val transport = GqlTransport("https://rpc-testnet.tychoprotocol.com/proto")
+val transport = ProtoTransport("https://rpc-testnet.tychoprotocol.com/proto")
 if (!transport.isConnected()) {
     println("Cannot connect to blockchain network")
 }

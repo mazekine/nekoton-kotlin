@@ -25,7 +25,7 @@ import kotlinx.coroutines.runBlocking
  *       sending a transaction to the blockchain.
  */
 class MultiSigWallet {
-    private val transport = JrpcTransport("https://rpc-testnet.tychoprotocol.com/proto")
+    private val transport = JrpcTransport("https://rpc-testnet.tychoprotocol.com/")
 
     fun demonstrateMultiSigWallet() = runBlocking {
         println("=== Multi-Signature Wallet ===")
