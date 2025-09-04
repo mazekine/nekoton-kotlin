@@ -30,7 +30,7 @@ Add the following to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("com.mazekine:nekoton-kotlin:0.1.0")
+    implementation("com.mazekine:nekoton-kotlin:0.31.0")
 }
 ```
 
@@ -480,8 +480,9 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ./gradlew createCentralBundle
 ```
 
-The bundle will be available under `build/bundle` and contains the JAR, POM,
-sources, Javadoc and signature files in the required directory layout.
+The bundle will be available under `build/bundle` and contains the JAR,
+sources, Javadoc, POM along with signature and checksum files in the required
+directory layout.
 
 ## License
 

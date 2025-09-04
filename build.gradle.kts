@@ -3,6 +3,7 @@ import org.gradle.api.publish.maven.tasks.GenerateMavenPom
 import org.gradle.api.tasks.bundling.Zip
 import java.security.MessageDigest
 import java.io.File
+import java.io.ByteArrayOutputStream
 
 plugins {
     kotlin("jvm") version "2.0.21"
@@ -14,7 +15,15 @@ plugins {
 }
 
 group = "com.mazekine"
-version = "0.1.0"
+
+val commitCount = ByteArrayOutputStream().use { output ->
+    exec {
+        commandLine("git", "rev-list", "--count", "HEAD")
+        standardOutput = output
+    }
+    output.toString().trim()
+}
+version = "0.$commitCount.0"
 
 repositories {
     mavenCentral()
@@ -174,6 +183,10 @@ publishing {
                 password = findProperty("sonatypePassword") as String? ?: System.getenv("SONATYPE_PASSWORD")
             }
         }
+        maven {
+            name = "bundle"
+            url = layout.buildDirectory.dir("central-repo").get().asFile.toURI()
+        }
     }
 }
 
@@ -208,12 +221,15 @@ tasks.jar {
     }
 }
 
-val publicationDir = layout.buildDirectory.dir("publications/maven")
+val bundleRepoDir = layout.buildDirectory.dir("central-repo")
+val groupPath = "${project.group.toString().replace('.', '/')}/${project.name}/${project.version}"
+
+val publishToBundleRepo = tasks.named("publishMavenPublicationToBundleRepository")
 
 val generateChecksums by tasks.registering {
-    dependsOn("signMavenPublication")
+    dependsOn(publishToBundleRepo)
     doLast {
-        publicationDir.get().asFile.listFiles()?.forEach { file ->
+        bundleRepoDir.map { it.dir(groupPath) }.get().asFile.listFiles()?.forEach { file ->
             if (file.isFile && !file.name.endsWith(".asc") && !file.name.endsWith(".md5") && !file.name.endsWith(".sha1")) {
                 val bytes = file.readBytes()
                 val sha1 = MessageDigest.getInstance("SHA-1").digest(bytes)
@@ -232,12 +248,10 @@ val createCentralBundle by tasks.registering(Zip::class) {
     description = "Creates a bundle for manual upload to Sonatype Central"
     dependsOn(generateChecksums)
 
-    val groupPath = "${project.group.toString().replace('.', '/')}/${project.name}/${project.version}"
     archiveFileName.set("${project.name}-${project.version}-bundle.zip")
     destinationDirectory.set(layout.buildDirectory.dir("bundle"))
 
-    from(publicationDir) {
-        into(groupPath)
-        rename("pom-default\\.xml", "${project.name}-${project.version}.pom")
+    from(bundleRepoDir) {
+        include("$groupPath/**")
     }
 }
