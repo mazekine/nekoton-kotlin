@@ -159,7 +159,7 @@ publishing {
             pom {
                 name.set("Nekoton Kotlin")
                 description.set("Kotlin bindings for Nekoton - Broxus SDK with TIP3 wallets support")
-                url.set("https://github.com/broxus/nekoton-kotlin")
+                url.set("https://github.com/mazekine/nekoton-kotlin")
                 
                 licenses {
                     license {
