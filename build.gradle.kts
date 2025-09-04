@@ -1,5 +1,8 @@
 import org.gradle.jvm.tasks.Jar
 import org.gradle.api.publish.maven.tasks.GenerateMavenPom
+import org.gradle.api.tasks.bundling.Zip
+import java.security.MessageDigest
+import java.io.File
 
 plugins {
     kotlin("jvm") version "2.0.21"
@@ -202,5 +205,39 @@ tasks.jar {
     from(generatePomProperties.map { it.outputs.files.singleFile }) {
         into("META-INF/maven/${project.group}/${project.name}")
         rename { "pom.properties" }
+    }
+}
+
+val publicationDir = layout.buildDirectory.dir("publications/maven")
+
+val generateChecksums by tasks.registering {
+    dependsOn("signMavenPublication")
+    doLast {
+        publicationDir.get().asFile.listFiles()?.forEach { file ->
+            if (file.isFile && !file.name.endsWith(".asc") && !file.name.endsWith(".md5") && !file.name.endsWith(".sha1")) {
+                val bytes = file.readBytes()
+                val sha1 = MessageDigest.getInstance("SHA-1").digest(bytes)
+                    .joinToString("") { "%02x".format(it) }
+                val md5 = MessageDigest.getInstance("MD5").digest(bytes)
+                    .joinToString("") { "%02x".format(it) }
+                File(file.parentFile, "${file.name}.sha1").writeText(sha1)
+                File(file.parentFile, "${file.name}.md5").writeText(md5)
+            }
+        }
+    }
+}
+
+val createCentralBundle by tasks.registering(Zip::class) {
+    group = "distribution"
+    description = "Creates a bundle for manual upload to Sonatype Central"
+    dependsOn(generateChecksums)
+
+    val groupPath = "${project.group.toString().replace('.', '/')}/${project.name}/${project.version}"
+    archiveFileName.set("${project.name}-${project.version}-bundle.zip")
+    destinationDirectory.set(layout.buildDirectory.dir("bundle"))
+
+    from(publicationDir) {
+        into(groupPath)
+        rename("pom-default\\.xml", "${project.name}-${project.version}.pom")
     }
 }
