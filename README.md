@@ -473,6 +473,16 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ./gradlew buildRustLibrary build test
 ```
 
+### Maven Central Upload
+
+```bash
+# Build artifacts and create bundle for Sonatype's upload portal
+./gradlew createCentralBundle
+```
+
+The bundle will be available under `build/bundle` and contains the JAR, POM,
+sources, Javadoc and signature files in the required directory layout.
+
 ## License
 
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
