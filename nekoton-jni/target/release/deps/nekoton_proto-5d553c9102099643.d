@@ -1,0 +1,11 @@
+/mnt/c/Dev/nekoton-kotlin/nekoton-jni/target/release/deps/nekoton_proto-5d553c9102099643.d: /home/cryonyx/.cargo/git/checkouts/nekoton-856d93d8413b367b/c7bdb88/nekoton-proto/src/lib.rs /home/cryonyx/.cargo/git/checkouts/nekoton-856d93d8413b367b/c7bdb88/nekoton-proto/src/models.rs /home/cryonyx/.cargo/git/checkouts/nekoton-856d93d8413b367b/c7bdb88/nekoton-proto/src/protos/mod.rs /home/cryonyx/.cargo/git/checkouts/nekoton-856d93d8413b367b/c7bdb88/nekoton-proto/src/utils.rs /home/cryonyx/.cargo/git/checkouts/nekoton-856d93d8413b367b/c7bdb88/nekoton-proto/src/protos/rpc.rs
+
+/mnt/c/Dev/nekoton-kotlin/nekoton-jni/target/release/deps/libnekoton_proto-5d553c9102099643.rlib: /home/cryonyx/.cargo/git/checkouts/nekoton-856d93d8413b367b/c7bdb88/nekoton-proto/src/lib.rs /home/cryonyx/.cargo/git/checkouts/nekoton-856d93d8413b367b/c7bdb88/nekoton-proto/src/models.rs /home/cryonyx/.cargo/git/checkouts/nekoton-856d93d8413b367b/c7bdb88/nekoton-proto/src/protos/mod.rs /home/cryonyx/.cargo/git/checkouts/nekoton-856d93d8413b367b/c7bdb88/nekoton-proto/src/utils.rs /home/cryonyx/.cargo/git/checkouts/nekoton-856d93d8413b367b/c7bdb88/nekoton-proto/src/protos/rpc.rs
+
+/mnt/c/Dev/nekoton-kotlin/nekoton-jni/target/release/deps/libnekoton_proto-5d553c9102099643.rmeta: /home/cryonyx/.cargo/git/checkouts/nekoton-856d93d8413b367b/c7bdb88/nekoton-proto/src/lib.rs /home/cryonyx/.cargo/git/checkouts/nekoton-856d93d8413b367b/c7bdb88/nekoton-proto/src/models.rs /home/cryonyx/.cargo/git/checkouts/nekoton-856d93d8413b367b/c7bdb88/nekoton-proto/src/protos/mod.rs /home/cryonyx/.cargo/git/checkouts/nekoton-856d93d8413b367b/c7bdb88/nekoton-proto/src/utils.rs /home/cryonyx/.cargo/git/checkouts/nekoton-856d93d8413b367b/c7bdb88/nekoton-proto/src/protos/rpc.rs
+
+/home/cryonyx/.cargo/git/checkouts/nekoton-856d93d8413b367b/c7bdb88/nekoton-proto/src/lib.rs:
+/home/cryonyx/.cargo/git/checkouts/nekoton-856d93d8413b367b/c7bdb88/nekoton-proto/src/models.rs:
+/home/cryonyx/.cargo/git/checkouts/nekoton-856d93d8413b367b/c7bdb88/nekoton-proto/src/protos/mod.rs:
+/home/cryonyx/.cargo/git/checkouts/nekoton-856d93d8413b367b/c7bdb88/nekoton-proto/src/utils.rs:
+/home/cryonyx/.cargo/git/checkouts/nekoton-856d93d8413b367b/c7bdb88/nekoton-proto/src/protos/rpc.rs:

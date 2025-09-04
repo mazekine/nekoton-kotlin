@@ -378,7 +378,7 @@ pub extern "C" fn Java_com_mazekine_nekoton_Native_cellBuilderBuild(
 
 #[no_mangle]
 pub extern "C" fn Java_com_mazekine_nekoton_Native_getJettonWalletAddress(
-    mut env: JNIEnv,
+    env: JNIEnv,
     _class: JClass,
     _root_address: JByteArray,
     owner_address: JByteArray,

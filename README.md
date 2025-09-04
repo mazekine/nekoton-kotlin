@@ -1,6 +1,6 @@
 # Nekoton Kotlin
 
-Kotlin bindings for [Nekoton](https://github.com/broxus/nekoton) – a universal TVM library covering TON, Everscale, Venom, and any Tycho‑based networks, with TIP3 wallet support.
+Kotlin bindings for [Nekoton](https://github.com/broxus/nekoton) – a universal TVM library covering TON, Everscale, Venom, and any Tycho‑based networks, with TIP3/Jetton wallet support.
 
 This library provides comprehensive Kotlin bindings that mimic the structure and functionality of [nekoton-python](https://github.com/broxus/nekoton-python), enabling developers to interact with TVM blockchains using modern Kotlin features and **native Rust performance**.
 
@@ -141,7 +141,7 @@ runBlocking {
     val inputs = mapOf(
         "to" to recipientAddress.toString(),
         "tokens" to "1000000000", // 1 token with 9 decimals
-        "grams" to "100000000"    // 0.1 EVER for fees
+        "grams" to "100000000"    // 0.1 TYCHO for fees
     )
     
     // Encode function call
@@ -481,8 +481,6 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 - **[nekoton](https://github.com/broxus/nekoton)** - Core Rust library (native backend)
 - **[nekoton-python](https://github.com/broxus/nekoton-python)** - Python bindings (reference implementation)
-- **[ton-labs-types](https://github.com/broxus/ton-labs-types)** - Core TON types
-- **[ton-labs-abi](https://github.com/broxus/ton-labs-abi)** - ABI encoding/decoding
 
 ## Changelog
 
@@ -505,4 +503,3 @@ For questions and support:
 - 💡 **Feature Requests**: Open an issue with the "enhancement" label
 - 💬 **Discussions**: Use GitHub Discussions for general questions
 
-**Maintainer**: Vladislav Ponomarev (@vp-mazekine)

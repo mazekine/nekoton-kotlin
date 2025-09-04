@@ -79,7 +79,7 @@ dependencies {
 // Add Rust compilation task
 tasks.register<Exec>("buildRustLibrary") {
     workingDir = file("nekoton-jni")
-    commandLine("cargo", "build", "--release")
+    commandLine("bash", "-lc", "cargo build --release")
     
     inputs.dir("nekoton-jni/src")
     inputs.file("nekoton-jni/Cargo.toml")
@@ -118,6 +118,7 @@ val javadocJar by tasks.registering(Jar::class) {
 }
 
 val sourcesJar by tasks.registering(Jar::class) {
+    dependsOn(tasks.named("copyNativeLibrary"))
     archiveClassifier.set("sources")
     from(sourceSets.main.get().allSource)
 }
@@ -144,16 +145,16 @@ publishing {
                 
                 developers {
                     developer {
-                        id.set("broxus")
-                        name.set("Broxus Team")
-                        organization.set("Broxus")
+                        id.set("com.mazekine")
+                        name.set("Mazekine Team")
+                        organization.set("Mazekine")
                     }
                 }
                 
                 scm {
-                    connection.set("scm:git:git://github.com/broxus/nekoton-kotlin.git")
-                    developerConnection.set("scm:git:ssh://github.com:broxus/nekoton-kotlin.git")
-                    url.set("https://github.com/broxus/nekoton-kotlin")
+                    connection.set("scm:git:git://github.com/mazekine/nekoton-kotlin.git")
+                    developerConnection.set("scm:git:ssh://github.com:mazekine/nekoton-kotlin.git")
+                    url.set("https://github.com/mazekine/nekoton-kotlin")
                 }
             }
         }
@@ -173,5 +174,6 @@ publishing {
 }
 
 signing {
+    useGpgCmd()
     sign(publishing.publications["maven"])
 }

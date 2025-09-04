@@ -1,0 +1,12 @@
+/mnt/c/Dev/nekoton-kotlin/nekoton-jni/target/release/deps/prost-28a6338e0e109be5.d: /home/cryonyx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prost-0.11.9/src/lib.rs /home/cryonyx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prost-0.11.9/src/error.rs /home/cryonyx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prost-0.11.9/src/message.rs /home/cryonyx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prost-0.11.9/src/types.rs /home/cryonyx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prost-0.11.9/src/encoding.rs /home/cryonyx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prost-0.11.9/src/../README.md
+
+/mnt/c/Dev/nekoton-kotlin/nekoton-jni/target/release/deps/libprost-28a6338e0e109be5.rlib: /home/cryonyx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prost-0.11.9/src/lib.rs /home/cryonyx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prost-0.11.9/src/error.rs /home/cryonyx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prost-0.11.9/src/message.rs /home/cryonyx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prost-0.11.9/src/types.rs /home/cryonyx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prost-0.11.9/src/encoding.rs /home/cryonyx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prost-0.11.9/src/../README.md
+
+/mnt/c/Dev/nekoton-kotlin/nekoton-jni/target/release/deps/libprost-28a6338e0e109be5.rmeta: /home/cryonyx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prost-0.11.9/src/lib.rs /home/cryonyx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prost-0.11.9/src/error.rs /home/cryonyx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prost-0.11.9/src/message.rs /home/cryonyx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prost-0.11.9/src/types.rs /home/cryonyx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prost-0.11.9/src/encoding.rs /home/cryonyx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prost-0.11.9/src/../README.md
+
+/home/cryonyx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prost-0.11.9/src/lib.rs:
+/home/cryonyx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prost-0.11.9/src/error.rs:
+/home/cryonyx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prost-0.11.9/src/message.rs:
+/home/cryonyx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prost-0.11.9/src/types.rs:
+/home/cryonyx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prost-0.11.9/src/encoding.rs:
+/home/cryonyx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prost-0.11.9/src/../README.md:
