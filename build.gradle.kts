@@ -1,4 +1,5 @@
 import org.gradle.jvm.tasks.Jar
+import org.gradle.api.publish.maven.tasks.GenerateMavenPom
 
 plugins {
     kotlin("jvm") version "2.0.21"
@@ -176,4 +177,30 @@ publishing {
 signing {
     useGpgCmd()
     sign(publishing.publications["maven"])
+}
+
+val generatePomFile = tasks.named<GenerateMavenPom>("generatePomFileForMavenPublication")
+
+val generatePomProperties by tasks.registering {
+    val props = layout.buildDirectory.file("generated-pom.properties")
+    outputs.file(props)
+    doLast {
+        props.get().asFile.writeText(
+            "version=${project.version}\n" +
+            "groupId=${project.group}\n" +
+            "artifactId=${project.name}\n"
+        )
+    }
+}
+
+tasks.jar {
+    dependsOn(generatePomFile, generatePomProperties)
+    from(generatePomFile.map { it.destination }) {
+        into("META-INF/maven/${project.group}/${project.name}")
+        rename { "pom.xml" }
+    }
+    from(generatePomProperties.map { it.outputs.files.singleFile }) {
+        into("META-INF/maven/${project.group}/${project.name}")
+        rename { "pom.properties" }
+    }
 }
