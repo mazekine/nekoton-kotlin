@@ -31,18 +31,7 @@ data class ContractAbi(
 ) {
     private var nativeHandle: Long = 0
     private var isNativeInitialized = false
-    
-    init {
-        if (Native.isInitialized()) {
-            try {
-                // We would need the original JSON for native parsing
-                // For now, just mark as not initialized
-                isNativeInitialized = false
-            } catch (e: Exception) {
-                isNativeInitialized = false
-            }
-        }
-    }
+
     /**
      * Creates a ContractAbi from JSON string.
      * 
@@ -205,13 +194,13 @@ data class ContractAbi(
         val input = function.decodeInput(body, inMsg.isInternal())
         
         // Look for output in outgoing messages
-        val output = transaction.outMsgs
-            .mapNotNull { msg -> msg.body?.let { body -> 
+        val output = transaction.outMsgs.firstNotNullOfOrNull { msg ->
+            msg.body?.let { body ->
                 if (extractFunctionId(body) == function.outputId) {
                     function.decodeOutput(body, false)
                 } else null
-            }}
-            .firstOrNull() ?: emptyMap()
+            }
+        } ?: emptyMap()
         
         return FunctionCall(
             function = function,
