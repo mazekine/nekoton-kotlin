@@ -1,5 +1,10 @@
 # Nekoton Kotlin
 
+[![Maven Central Version](https://img.shields.io/maven-central/v/com.mazekine/nekoton-kotlin?style=plastic)](https://central.sonatype.com/artifact/com.mazekine/nekoton-kotlin)
+![Kotlin Version](https://img.shields.io/badge/kotlin-2.0.21-blue?style=plastic)
+![Gradle Version](https://img.shields.io/badge/gradle-8.12-green?style=plastic)
+![Java Version](https://img.shields.io/badge/java-17+-purple?style=plastic)
+
 Kotlin bindings for [Nekoton](https://github.com/broxus/nekoton) – a universal TVM library covering TON, Everscale, Venom, and any Tycho‑based networks, with TIP3/Jetton wallet support.
 
 This library provides comprehensive Kotlin bindings that mimic the structure and functionality of [nekoton-python](https://github.com/broxus/nekoton-python), enabling developers to interact with TVM blockchains using modern Kotlin features and **native Rust performance**.
@@ -30,7 +35,7 @@ Add the following to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("com.mazekine:nekoton-kotlin:0.31.0")
+    implementation("com.mazekine:nekoton-kotlin:0.1.34")
 }
 ```
 
