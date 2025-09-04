@@ -45,3 +45,4 @@ coverage/
 # Local configuration
 local.properties
 /maven.sh
+maven_bundle.sh
