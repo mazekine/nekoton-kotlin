@@ -3,11 +3,14 @@ package com.mazekine.nekoton.abi
 import com.mazekine.nekoton.Native
 import com.mazekine.nekoton.crypto.PublicKey
 import com.mazekine.nekoton.models.*
+import com.ionspin.kotlin.bignum.integer.BigInteger
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.decodeFromString
 import java.io.File
 
@@ -123,7 +126,7 @@ data class ContractAbi(
      * @param data The data cell to decode
      * @return Pair of optional public key and decoded parameters
      */
-    fun decodeInitData(data: Cell): Pair<PublicKey?, Map<String, Any>> {
+    fun decodeInitData(data: Cell): Pair<PublicKey?, Map<String, Any?>> {
         val slice = data.beginParse()
         
         // Try to read public key (first 32 bytes)
@@ -139,7 +142,7 @@ data class ContractAbi(
         }
         
         // Decode data parameters
-        val decodedData = mutableMapOf<String, Any>()
+        val decodedData = mutableMapOf<String, Any?>()
         for ((paramName, param) in this.data) {
             decodedData[paramName] = decodeParam(slice, param)
         }
@@ -154,7 +157,7 @@ data class ContractAbi(
      * @param allowPartial Whether to allow partial decoding
      * @return Map of decoded field values
      */
-    fun decodeFields(data: Any, allowPartial: Boolean = false): Map<String, Any> {
+    fun decodeFields(data: Any, allowPartial: Boolean = false): Map<String, Any?> {
         val cell = when (data) {
             is Cell -> data
             is AccountState -> data.getData() ?: throw IllegalArgumentException("Account state without data")
@@ -162,7 +165,7 @@ data class ContractAbi(
         }
         
         val slice = cell.beginParse()
-        val decodedFields = mutableMapOf<String, Any>()
+        val decodedFields = mutableMapOf<String, Any?>()
         
         for ((fieldName, param) in this.data) {
             try {
@@ -233,6 +236,9 @@ data class ContractAbi(
         return decodedEvents
     }
 
+    /**
+     * Provides a concise textual summary of the ABI.
+     */
     override fun toString(): String {
         return "ContractAbi(version=$abiVersion, functions=${functions.size}, events=${events.size})"
     }
@@ -258,7 +264,10 @@ data class ContractAbi(
         fun fromFile(path: String): ContractAbi = fromFile(File(path))
 
         /**
-         * Parses ABI JSON string into ContractAbi.
+         * Parses ABI JSON string into a [ContractAbi] instance.
+         *
+         * @param abiJson ABI definition in JSON format
+         * @return Parsed [ContractAbi]
          */
         private fun parseAbiJson(abiJson: String): ContractAbi {
             val json = Json.parseToJsonElement(abiJson).jsonObject
@@ -270,50 +279,303 @@ data class ContractAbi(
             
             // Parse functions
             val functions = mutableMapOf<String, FunctionAbi>()
-            json["functions"]?.let { functionsJson ->
-                // Parse function definitions
-                TODO("Function parsing not yet implemented")
+            json["functions"]?.jsonArray?.forEach { fnElem ->
+                val fnObj = fnElem.jsonObject
+                val name = fnObj["name"]?.jsonPrimitive?.content ?: return@forEach
+                val inputs = fnObj["inputs"]?.jsonArray?.map { parseParam(it.jsonObject) } ?: emptyList()
+                val outputs = fnObj["outputs"]?.jsonArray?.map { parseParam(it.jsonObject) } ?: emptyList()
+
+                val idString = fnObj["id"]?.jsonPrimitive?.content
+                val inputId = idString?.let { parseId(it) } ?: computeId(name)
+                val outputId = fnObj["outputId"]?.jsonPrimitive?.content?.let { parseId(it) } ?: inputId
+
+                val functionAbi = FunctionAbi(
+                    abiVersion = abiVersion,
+                    name = name,
+                    inputId = inputId,
+                    outputId = outputId,
+                    inputs = inputs,
+                    outputs = outputs
+                )
+                functions[name] = functionAbi
             }
-            
+
             // Parse events
             val events = mutableMapOf<String, EventAbi>()
-            json["events"]?.let { eventsJson ->
-                // Parse event definitions
-                TODO("Event parsing not yet implemented")
+            json["events"]?.jsonArray?.forEach { evElem ->
+                val evObj = evElem.jsonObject
+                val name = evObj["name"]?.jsonPrimitive?.content ?: return@forEach
+                val inputs = evObj["inputs"]?.jsonArray?.map { parseParam(it.jsonObject) } ?: emptyList()
+                val id = evObj["id"]?.jsonPrimitive?.content?.let { parseId(it) } ?: computeId(name)
+
+                val eventAbi = EventAbi(
+                    abiVersion = abiVersion,
+                    name = name,
+                    id = id,
+                    inputs = inputs
+                )
+                events[name] = eventAbi
             }
-            
+
             // Parse data fields
             val data = mutableMapOf<String, AbiParam>()
-            json["data"]?.let { dataJson ->
-                // Parse data field definitions
-                TODO("Data field parsing not yet implemented")
+            json["data"]?.jsonArray?.forEach { dataElem ->
+                val obj = dataElem.jsonObject
+                val name = obj["name"]?.jsonPrimitive?.content ?: return@forEach
+                val type = obj["type"]?.jsonPrimitive?.content ?: return@forEach
+                val components = obj["components"]?.jsonArray?.map { parseParam(it.jsonObject) }
+                data[name] = AbiParam(name, type, components)
             }
-            
+
             return ContractAbi(abiVersion, functions, events, data)
         }
 
         /**
-         * Encodes a parameter value into a cell builder.
+         * Encodes a parameter value into a [CellBuilder].
+         *
+         * @param builder Builder to write encoded data to
+         * @param param ABI parameter description
+         * @param value Value to encode; may be `null` for optional parameters
          */
-        private fun encodeParam(builder: CellBuilder, param: AbiParam, value: Any) {
-            // This would require the actual parameter encoding logic
-            TODO("Parameter encoding not yet implemented")
+        @Suppress("UNCHECKED_CAST")
+        private fun encodeParam(builder: CellBuilder, param: AbiParam, value: Any?) {
+            val type = AbiType.fromString(param.type)
+            when (type) {
+                AbiType.UINT -> {
+                    val bits = AbiTypeUtils.getIntegerBitSize(param.type)
+                    val intValue = toBigInteger(value!!)
+                    builder.writeUint(intValue, bits)
+                }
+                AbiType.INT -> {
+                    val bits = AbiTypeUtils.getIntegerBitSize(param.type)
+                    val intValue = toBigInteger(value!!)
+                    builder.writeInt(intValue, bits)
+                }
+                AbiType.BOOL -> builder.writeBit(value as Boolean)
+                AbiType.BYTES -> {
+                    val bytes = when (value) {
+                        is ByteArray -> value
+                        is String -> value.toByteArray()
+                        else -> throw IllegalArgumentException("Unsupported bytes value for ${param.name}")
+                    }
+                    builder.writeUint(bytes.size.toLong(), 32)
+                    builder.writeBytes(bytes)
+                }
+                AbiType.BYTES_FIXED -> {
+                    val size = AbiTypeUtils.getFixedBytesSize(param.type)
+                    val bytes = when (value) {
+                        is ByteArray -> value
+                        is String -> value.toByteArray()
+                        else -> throw IllegalArgumentException("Unsupported bytes value for ${param.name}")
+                    }
+                    require(bytes.size == size) { "Invalid byte array size for ${param.name}" }
+                    builder.writeBytes(bytes)
+                }
+                AbiType.STRING -> {
+                    val bytes = value.toString().toByteArray()
+                    // Strings are encoded with a 32-bit length prefix followed by UTF-8 bytes
+                    builder.writeUint(bytes.size.toLong(), 32)
+                    builder.writeBytes(bytes)
+                }
+                AbiType.ADDRESS -> {
+                    val addr = when (value) {
+                        is Address -> value
+                        is String -> Address(value)
+                        null -> null
+                        else -> throw IllegalArgumentException("Unsupported address value for ${param.name}")
+                    }
+                    builder.writeAddress(addr)
+                }
+                AbiType.CELL -> builder.writeRef(value as Cell)
+                AbiType.GRAMS -> {
+                    val tokens = when (value) {
+                        is Tokens -> value
+                        is String -> Tokens(value)
+                        is Long -> Tokens(value)
+                        is Int -> Tokens(value)
+                        else -> throw IllegalArgumentException("Unsupported tokens value for ${param.name}")
+                    }
+                    builder.writeTokens(tokens)
+                }
+                AbiType.TUPLE -> {
+                    val map = when (value) {
+                        is Map<*, *> -> value as Map<String, Any?>
+                        else -> throw IllegalArgumentException("Tuple value must be a map")
+                    }
+                    param.components?.forEach { comp ->
+                        val v = map[comp.name] ?: throw IllegalArgumentException("Missing tuple field ${comp.name}")
+                        encodeParam(builder, comp, v)
+                    }
+                }
+                AbiType.ARRAY -> {
+                    val list = when (value) {
+                        is List<*> -> value as List<Any?>
+                        else -> throw IllegalArgumentException("Array value must be a list")
+                    }
+                    builder.writeUint(list.size.toLong(), 32)
+                    val component = param.components?.firstOrNull() ?: AbiParam(param.name, param.getBaseType())
+                    list.forEach { v -> encodeParam(builder, component, v) }
+                }
+                AbiType.OPTIONAL -> {
+                    if (value == null) {
+                        builder.writeBit(false)
+                    } else {
+                        builder.writeBit(true)
+                        val innerType = AbiParam(param.name, AbiTypeUtils.parseOptionalType(param.type), param.components)
+                        encodeParam(builder, innerType, value)
+                    }
+                }
+                AbiType.MAP -> {
+                    val map = value as Map<*, *>
+                    builder.writeUint(map.size.toLong(), 32)
+                    val (keyType, valueType) = AbiTypeUtils.parseMapType(param.type)
+                    val keyParam = AbiParam("key", keyType)
+                    val valueParam = AbiParam("value", valueType)
+                    map.forEach { (k, v) ->
+                        encodeParam(builder, keyParam, k!!)
+                        encodeParam(builder, valueParam, v!!)
+                    }
+                }
+            }
         }
 
         /**
-         * Decodes a parameter value from a cell slice.
+         * Decodes a parameter value from a [CellSlice].
+         *
+         * @param slice Cell slice containing encoded data
+         * @param param ABI parameter description
+         * @return Decoded value
          */
-        private fun decodeParam(slice: CellSlice, param: AbiParam): Any {
-            // This would require the actual parameter decoding logic
-            TODO("Parameter decoding not yet implemented")
+        private fun decodeParam(slice: CellSlice, param: AbiParam): Any? {
+            val type = AbiType.fromString(param.type)
+            return when (type) {
+                AbiType.UINT -> {
+                    val bits = AbiTypeUtils.getIntegerBitSize(param.type)
+                    slice.readUint(bits)
+                }
+                AbiType.INT -> {
+                    val bits = AbiTypeUtils.getIntegerBitSize(param.type)
+                    slice.readInt(bits)
+                }
+                AbiType.BOOL -> slice.readBit()
+                AbiType.BYTES -> {
+                    val len = slice.readUint(32).intValue()
+                    slice.readBytes(len)
+                }
+                AbiType.BYTES_FIXED -> {
+                    val size = AbiTypeUtils.getFixedBytesSize(param.type)
+                    slice.readBytes(size)
+                }
+                AbiType.STRING -> {
+                    val len = slice.readUint(32).intValue()
+                    String(slice.readBytes(len))
+                }
+                AbiType.ADDRESS -> slice.readAddress()
+                AbiType.CELL -> slice.readRef()
+                AbiType.GRAMS -> Tokens(slice.readVarUint(4))
+                AbiType.TUPLE -> {
+                    val map = mutableMapOf<String, Any?>()
+                    param.components?.forEach { comp ->
+                        map[comp.name] = decodeParam(slice, comp)
+                    }
+                    map
+                }
+                AbiType.ARRAY -> {
+                    val length = slice.readUint(32).intValue()
+                    val list = mutableListOf<Any?>()
+                    val component = param.components?.firstOrNull() ?: AbiParam(param.name, param.getBaseType())
+                    repeat(length) { list.add(decodeParam(slice, component)) }
+                    list
+                }
+                AbiType.OPTIONAL -> {
+                    val has = slice.readBit()
+                    if (!has) null else {
+                        val innerType = AbiParam(param.name, AbiTypeUtils.parseOptionalType(param.type), param.components)
+                        decodeParam(slice, innerType)
+                    }
+                }
+                AbiType.MAP -> {
+                    val size = slice.readUint(32).intValue()
+                    val result = mutableMapOf<Any?, Any?>()
+                    val (keyType, valueType) = AbiTypeUtils.parseMapType(param.type)
+                    val keyParam = AbiParam("key", keyType)
+                    val valueParam = AbiParam("value", valueType)
+                    repeat(size) {
+                        val key = decodeParam(slice, keyParam)
+                        val value = decodeParam(slice, valueParam)
+                        result[key] = value
+                    }
+                    result
+                }
+            }
         }
 
         /**
-         * Extracts function ID from message body.
+         * Extracts the function identifier from a message body.
+         *
+         * The TON ABI stores the function ID in the first 32 bits of the
+         * message body. If fewer than 32 bits are available the message is
+         * considered not to contain a function call and `null` is returned.
+         *
+         * @param body Cell containing the message body
+         * @return Function ID or `null` if the body is too short
          */
         private fun extractFunctionId(body: Cell): Int? {
-            // This would require the actual function ID extraction logic
-            TODO("Function ID extraction not yet implemented")
+            val slice = body.beginParse()
+            // Function ID resides in the first 32 bits of the body
+            return if (slice.remainingBits >= 32) slice.readUint(32).intValue() else null
+        }
+
+        // Helper functions
+
+        /**
+         * Converts a JSON object describing a parameter into an [AbiParam] instance.
+         *
+         * @param obj JSON object containing `name`, `type` and optional `components`
+         * @return Parsed ABI parameter
+         */
+        private fun parseParam(obj: JsonObject): AbiParam {
+            val name = obj["name"]?.jsonPrimitive?.content ?: ""
+            val type = obj["type"]?.jsonPrimitive?.content ?: ""
+            val components = obj["components"]?.jsonArray?.map { parseParam(it.jsonObject) }
+            return AbiParam(name, type, components)
+        }
+
+        /**
+         * Parses a hexadecimal identifier string into an integer.
+         *
+         * The `0x` prefix is optional.
+         *
+         * @param id Identifier string
+         * @return Integer representation of the identifier
+         */
+        private fun parseId(id: String): Int = id.removePrefix("0x").toLong(16).toInt()
+
+        /**
+         * Computes an identifier for a function or event name using CRC32.
+         *
+         * @param name Function or event name
+         * @return Calculated identifier
+         */
+        private fun computeId(name: String): Int {
+            val crc = java.util.zip.CRC32()
+            crc.update(name.toByteArray())
+            return crc.value.toInt()
+        }
+
+        /**
+         * Converts various numeric representations to [BigInteger].
+         *
+         * @param value Numeric value in one of the supported types
+         * @return [BigInteger] representation of the value
+         */
+        private fun toBigInteger(value: Any): BigInteger = when (value) {
+            is BigInteger -> value
+            is Long -> BigInteger.fromLong(value)
+            is Int -> BigInteger.fromInt(value)
+            is String -> BigInteger.parseString(value)
+            is Number -> BigInteger.fromLong(value.toLong())
+            else -> throw IllegalArgumentException("Unsupported numeric value: $value")
         }
     }
 }
@@ -325,6 +587,9 @@ data class ContractAbi(
  */
 @Serializable
 data class AbiVersion(val version: Int) {
+    /**
+     * Returns the version number as a string.
+     */
     override fun toString(): String = version.toString()
 }
 
@@ -341,6 +606,9 @@ data class FunctionCall(
     val input: Map<String, @Contextual Any>,
     val output: Map<String, @Contextual Any>
 ){
+    /**
+     * Returns a human-readable representation of this call.
+     */
     override fun toString(): String {
         return "FunctionCall(${function.name}, input=${input.keys}, output=${output.keys})"
     }
