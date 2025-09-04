@@ -1,9 +1,13 @@
 import org.gradle.jvm.tasks.Jar
 import org.gradle.api.publish.maven.tasks.GenerateMavenPom
 import org.gradle.api.tasks.bundling.Zip
+import org.jetbrains.kotlin.konan.properties.saveToFile
 import java.security.MessageDigest
 import java.io.File
 import java.io.ByteArrayOutputStream
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.util.Properties
 
 plugins {
     kotlin("jvm") version "2.0.21"
@@ -16,14 +20,13 @@ plugins {
 
 group = "com.mazekine"
 
-val commitCount = ByteArrayOutputStream().use { output ->
-    exec {
-        commandLine("git", "rev-list", "--count", "HEAD")
-        standardOutput = output
-    }
-    output.toString().trim()
-}
-version = "0.$commitCount.0"
+val versionProps = Properties().apply { load(FileInputStream(rootProject.file("version.properties"))) }
+val versionMajor: Int = versionProps.getOrDefault("major", "0").toString().toInt()
+val versionMinor: Int = versionProps.getOrDefault("minor", "1").toString().toInt()
+val versionPatch: Int = versionProps.getOrDefault("patch", "0").toString().toInt() + 1
+versionProps["patch"] = versionPatch
+versionProps.store(rootProject.file("version.properties").writer(), null)
+version = "$versionMajor.$versionMinor.$versionPatch"
 
 repositories {
     mavenCentral()
