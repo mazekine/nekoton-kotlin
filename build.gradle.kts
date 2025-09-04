@@ -20,13 +20,22 @@ plugins {
 
 group = "com.mazekine"
 
-val versionProps = Properties().apply { load(FileInputStream(rootProject.file("version.properties"))) }
-val versionMajor: Int = versionProps.getOrDefault("major", "0").toString().toInt()
-val versionMinor: Int = versionProps.getOrDefault("minor", "1").toString().toInt()
-val versionPatch: Int = versionProps.getOrDefault("patch", "0").toString().toInt() + 1
-versionProps["patch"] = versionPatch
-versionProps.store(rootProject.file("version.properties").writer(), null)
+//  Iterate the version
+val versionPropsFile = File("version.properties")
+val versionProps = Properties()
+FileInputStream(versionPropsFile).use {
+    versionProps.load(it)
+}
+
+val versionMajor: Int = versionProps.getProperty("major").toIntOrNull() ?: 0
+val versionMinor: Int = versionProps.getProperty("minor").toIntOrNull() ?: 1
+var versionPatch: Int = (versionProps.getProperty("patch").toIntOrNull() ?: 0) + 1
+versionProps["patch"] = versionPatch.toString()
 version = "$versionMajor.$versionMinor.$versionPatch"
+
+FileOutputStream(versionPropsFile).use {
+    versionProps.store(it, version.toString())
+}
 
 repositories {
     mavenCentral()
