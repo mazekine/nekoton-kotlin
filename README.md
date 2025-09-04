@@ -30,7 +30,7 @@ Add the following to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("com.mazekine:nekoton-kotlin:0.1.0")
+    implementation("com.mazekine:nekoton-kotlin:0.31.0")
 }
 ```
 
@@ -472,6 +472,17 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 # Build project
 ./gradlew buildRustLibrary build test
 ```
+
+### Maven Central Upload
+
+```bash
+# Build artifacts and create bundle for Sonatype's upload portal
+./gradlew createCentralBundle
+```
+
+The bundle will be available under `build/bundle` and contains the JAR,
+sources, Javadoc, POM along with signature and checksum files in the required
+directory layout.
 
 ## License
 

@@ -1,5 +1,9 @@
 import org.gradle.jvm.tasks.Jar
 import org.gradle.api.publish.maven.tasks.GenerateMavenPom
+import org.gradle.api.tasks.bundling.Zip
+import java.security.MessageDigest
+import java.io.File
+import java.io.ByteArrayOutputStream
 
 plugins {
     kotlin("jvm") version "2.0.21"
@@ -11,7 +15,15 @@ plugins {
 }
 
 group = "com.mazekine"
-version = "0.1.0"
+
+val commitCount = ByteArrayOutputStream().use { output ->
+    exec {
+        commandLine("git", "rev-list", "--count", "HEAD")
+        standardOutput = output
+    }
+    output.toString().trim()
+}
+version = "0.$commitCount.0"
 
 repositories {
     mavenCentral()
@@ -171,6 +183,10 @@ publishing {
                 password = findProperty("sonatypePassword") as String? ?: System.getenv("SONATYPE_PASSWORD")
             }
         }
+        maven {
+            name = "bundle"
+            url = layout.buildDirectory.dir("central-repo").get().asFile.toURI()
+        }
     }
 }
 
@@ -202,5 +218,40 @@ tasks.jar {
     from(generatePomProperties.map { it.outputs.files.singleFile }) {
         into("META-INF/maven/${project.group}/${project.name}")
         rename { "pom.properties" }
+    }
+}
+
+val bundleRepoDir = layout.buildDirectory.dir("central-repo")
+val groupPath = "${project.group.toString().replace('.', '/')}/${project.name}/${project.version}"
+
+val publishToBundleRepo = tasks.named("publishMavenPublicationToBundleRepository")
+
+val generateChecksums by tasks.registering {
+    dependsOn(publishToBundleRepo)
+    doLast {
+        bundleRepoDir.map { it.dir(groupPath) }.get().asFile.listFiles()?.forEach { file ->
+            if (file.isFile && !file.name.endsWith(".asc") && !file.name.endsWith(".md5") && !file.name.endsWith(".sha1")) {
+                val bytes = file.readBytes()
+                val sha1 = MessageDigest.getInstance("SHA-1").digest(bytes)
+                    .joinToString("") { "%02x".format(it) }
+                val md5 = MessageDigest.getInstance("MD5").digest(bytes)
+                    .joinToString("") { "%02x".format(it) }
+                File(file.parentFile, "${file.name}.sha1").writeText(sha1)
+                File(file.parentFile, "${file.name}.md5").writeText(md5)
+            }
+        }
+    }
+}
+
+val createCentralBundle by tasks.registering(Zip::class) {
+    group = "distribution"
+    description = "Creates a bundle for manual upload to Sonatype Central"
+    dependsOn(generateChecksums)
+
+    archiveFileName.set("${project.name}-${project.version}-bundle.zip")
+    destinationDirectory.set(layout.buildDirectory.dir("bundle"))
+
+    from(bundleRepoDir) {
+        include("$groupPath/**")
     }
 }
