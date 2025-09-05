@@ -2,75 +2,65 @@ package com.mazekine.nekoton.crypto
 
 import com.mazekine.nekoton.Native
 import com.ionspin.kotlin.bignum.integer.BigInteger
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
 import org.bouncycastle.crypto.signers.Ed25519Signer
 import java.security.MessageDigest
+import java.util.Locale
 
 /**
  * Represents an Ed25519 public key used for cryptographic operations in the TON/Everscale network.
- * 
+ *
  * This class provides functionality for public key operations including signature verification,
  * encoding/decoding, and conversion between different formats.
- * 
- * @property keyBytes The 32-byte Ed25519 public key
+ *
+ * NOTE: Instances are immutable from the outside. Use factory methods to avoid leaking mutable buffers.
  */
 @Serializable
 data class PublicKey(
+    /** Backing bytes for the 32-byte public key. Treat as immutable. */
+    @SerialName("key_bytes")
     private val keyBytes: ByteArray
 ) {
     init {
         require(keyBytes.size == KEY_SIZE) { "Public key must be exactly $KEY_SIZE bytes" }
     }
 
-    /**
-     * Creates a PublicKey from a hex string.
-     * 
-     * @param hex The public key as a hex string (with or without 0x prefix)
-     */
+    /** Creates a PublicKey from a hex string (with or without 0x prefix). */
     constructor(hex: String) : this(parseHexKey(hex))
 
-    /**
-     * Creates a PublicKey from a BigInteger.
-     * 
-     * @param value The public key as a BigInteger
-     */
-    constructor(value: BigInteger) : this(value.toByteArray().let { bytes ->
-        when {
-            bytes.size == KEY_SIZE -> bytes
-            bytes.size > KEY_SIZE -> bytes.takeLast(KEY_SIZE).toByteArray()
-            else -> ByteArray(KEY_SIZE - bytes.size) + bytes
+    /** Creates a PublicKey from a BigInteger (left-pads or truncates to 32 bytes). */
+    constructor(value: BigInteger) : this(
+        value.toByteArray().let { bytes ->
+            when {
+                bytes.size == KEY_SIZE -> bytes
+                bytes.size > KEY_SIZE  -> bytes.copyOfRange(bytes.size - KEY_SIZE, bytes.size)
+                else                   -> ByteArray(KEY_SIZE - bytes.size).also {
+                    // left-pad with zeros
+                    System.arraycopy(bytes, 0, it, it.size - bytes.size, bytes.size)
+                }
+            }
         }
-    })
+    )
 
-    /**
-     * Gets the public key bytes.
-     * 
-     * @return The 32-byte public key
-     */
+    /** Returns a defensive copy of the 32-byte public key. */
     fun toBytes(): ByteArray = keyBytes.copyOf()
 
-    /**
-     * Converts the public key to a hex string.
-     * 
-     * @return Hex representation of the public key
-     */
-    fun toHex(): String = keyBytes.joinToString("") { "%02x".format(it) }
+    /** Hex representation (lowercase, no prefix). */
+    fun toHex(): String = hexEncode(keyBytes)
 
-    /**
-     * Converts the public key to a BigInteger.
-     * 
-     * @return The public key as a BigInteger
-     */
-    fun toBigInteger(): BigInteger = BigInteger.fromByteArray(keyBytes, sign = com.ionspin.kotlin.bignum.integer.Sign.POSITIVE)
+    /** BigInteger view (positive). */
+    fun toBigInteger(): BigInteger =
+        BigInteger.fromByteArray(keyBytes, sign = com.ionspin.kotlin.bignum.integer.Sign.POSITIVE)
 
     /**
      * Verifies a signature against the provided data.
-     * 
-     * @param data The data that was signed
-     * @param signature The signature to verify
-     * @param signatureId Optional signature ID for extended verification
-     * @return true if the signature is valid
+     *
+     * @param data Raw data that was signed (caller is responsible for hashing if applicable).
+     * @param signature Signature bytes wrapper.
+     * @param signatureId Optional signature ID to be appended to `data` before verification.
+     * @return true if the signature is valid; false otherwise.
      */
     fun verifySignature(data: ByteArray, signature: Signature, signatureId: Int? = null): Boolean {
         return try {
@@ -79,107 +69,64 @@ data class PublicKey(
                 Native.verifySignature(keyBytes, data, signature.toBytes(), sigId)
             } else {
                 val publicKeyParams = Ed25519PublicKeyParameters(keyBytes, 0)
-                val signer = Ed25519Signer()
-                signer.init(false, publicKeyParams)
-                
-                val dataToVerify = if (signatureId != null) {
-                    extendSignatureWithId(data, signatureId)
-                } else {
-                    data
-                }
-                
+                val signer = Ed25519Signer().apply { init(false, publicKeyParams) }
+
+                val dataToVerify =
+                    if (signatureId != null) appendSignatureId(data, signatureId) else data
+
                 signer.update(dataToVerify, 0, dataToVerify.size)
                 signer.verifySignature(signature.toBytes())
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             false
         }
     }
 
     /**
-     * Encodes the public key to the specified format.
-     * 
-     * @param encoding The encoding format (hex, base64)
-     * @return Encoded public key string
+     * Encodes the public key to a string.
+     *
+     * @param encoding Encoding type
      */
-    fun encode(encoding: String = "hex"): String {
-        return when (encoding.lowercase()) {
-            "hex" -> toHex()
-            "base64" -> java.util.Base64.getEncoder().encodeToString(keyBytes)
-            else -> throw IllegalArgumentException("Unsupported encoding: $encoding")
-        }
+    fun encode(encoding: Encoding = Encoding.HEX): String = when (encoding) {
+        Encoding.HEX    -> toHex()
+        Encoding.BASE64 -> java.util.Base64.getEncoder().encodeToString(keyBytes)
     }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
-
         other as PublicKey
-
         return keyBytes.contentEquals(other.keyBytes)
     }
 
-    override fun hashCode(): Int {
-        return keyBytes.contentHashCode()
-    }
+    override fun hashCode(): Int = keyBytes.contentHashCode()
 
-    override fun toString(): String {
-        return toHex()
-    }
+    override fun toString(): String = toHex()
 
     companion object {
-        /**
-         * Size of Ed25519 public key in bytes.
-         */
+        /** Size of Ed25519 public key in bytes. */
         const val KEY_SIZE = 32
 
-        /**
-         * Creates a PublicKey from a byte array.
-         * 
-         * @param bytes The public key bytes
-         * @return PublicKey instance
-         */
-        fun fromBytes(bytes: ByteArray): PublicKey = PublicKey(bytes)
+        /** Factory that defensively copies the input. */
+        fun fromBytes(bytes: ByteArray): PublicKey = PublicKey(bytes.copyOf())
 
-        /**
-         * Creates a PublicKey from an encoded string.
-         * 
-         * @param value The encoded public key string
-         * @param encoding The encoding format (hex, base64)
-         * @return PublicKey instance
-         */
-        fun fromString(value: String, encoding: String = "hex"): PublicKey {
-            val bytes = when (encoding.lowercase()) {
-                "hex" -> parseHexKey(value)
-                "base64" -> java.util.Base64.getDecoder().decode(value)
-                else -> throw IllegalArgumentException("Unsupported encoding: $encoding")
-            }
-            return PublicKey(bytes)
-        }
+        /** Factory for hex/base64 strings. */
+        fun fromString(value: String, encoding: Encoding = Encoding.HEX): PublicKey =
+            PublicKey(BytesCodec.decode(value, encoding))
 
-        /**
-         * Parses a hex string to bytes.
-         */
-        private fun parseHexKey(hex: String): ByteArray {
-            val cleanHex = hex.removePrefix("0x")
-            require(cleanHex.length == KEY_SIZE * 2) { "Hex public key must be ${KEY_SIZE * 2} characters" }
-            
-            return cleanHex.chunked(2)
-                .map { it.toInt(16).toByte() }
-                .toByteArray()
-        }
+        /** Parse hex string to bytes; accepts optional "0x" prefix. */
+        private fun parseHexKey(hex: String): ByteArray =
+            BytesCodec.hexDecode(hex, expectedBytes = KEY_SIZE)
 
-        /**
-         * Extends signature data with signature ID for verification.
-         */
-        private fun extendSignatureWithId(data: ByteArray, signatureId: Int): ByteArray {
-            val idBytes = ByteArray(4)
-            idBytes[0] = (signatureId shr 24).toByte()
-            idBytes[1] = (signatureId shr 16).toByte()
-            idBytes[2] = (signatureId shr 8).toByte()
-            idBytes[3] = signatureId.toByte()
-            
-            return data + idBytes
+        /** Append 4-byte big-endian signatureId to data with a single allocation. */
+        private fun appendSignatureId(data: ByteArray, signatureId: Int): ByteArray {
+            val out = ByteArray(data.size + 4)
+            System.arraycopy(data, 0, out, 0, data.size)
+            out[data.size]     = (signatureId ushr 24).toByte()
+            out[data.size + 1] = (signatureId ushr 16).toByte()
+            out[data.size + 2] = (signatureId ushr 8).toByte()
+            out[data.size + 3] = signatureId.toByte()
+            return out
         }
     }
 }
