@@ -117,7 +117,7 @@ data class AccountState(
      * Estimates the storage cost for the account.
      * 
      * @param pricePerCell Price per cell in nano-tokens
-     * @param pricePerBit Price per bit in nano-tokens
+     * @param pricePerBit Price per a bit in nano-tokens
      * @return Estimated storage cost
      */
     fun estimateStorageCost(pricePerCell: Long, pricePerBit: Long): Tokens {

@@ -35,10 +35,9 @@ data class PublicKey(
         value.toByteArray().let { bytes ->
             when {
                 bytes.size == KEY_SIZE -> bytes
-                bytes.size > KEY_SIZE  -> bytes.copyOfRange(bytes.size - KEY_SIZE, bytes.size)
-                else                   -> ByteArray(KEY_SIZE - bytes.size).also {
-                    // left-pad with zeros
-                    System.arraycopy(bytes, 0, it, it.size - bytes.size, bytes.size)
+                bytes.size  > KEY_SIZE -> bytes.copyOfRange(bytes.size - KEY_SIZE, bytes.size) // keep last 32
+                else -> ByteArray(KEY_SIZE).also { dest ->                                   // left-pad with zeros
+                    System.arraycopy(bytes, 0, dest, KEY_SIZE - bytes.size, bytes.size)
                 }
             }
         }
@@ -48,7 +47,7 @@ data class PublicKey(
     fun toBytes(): ByteArray = keyBytes.copyOf()
 
     /** Hex representation (lowercase, no prefix). */
-    fun toHex(): String = hexEncode(keyBytes)
+    fun toHex(): String = BytesCodec.hexEncode(keyBytes)
 
     /** BigInteger view (positive). */
     fun toBigInteger(): BigInteger =
