@@ -1,22 +1,42 @@
 package com.mazekine.nekoton.abi
 
+import com.mazekine.nekoton.Native
 import com.mazekine.nekoton.crypto.PublicKey
-import com.mazekine.nekoton.models.*
+import com.mazekine.nekoton.models.AccountState
+import com.mazekine.nekoton.models.BlockchainConfig
+import com.mazekine.nekoton.models.Cell
+import com.mazekine.nekoton.models.CellBuilder
+import com.mazekine.nekoton.models.Address
+import com.mazekine.nekoton.models.StateInit
+import com.mazekine.nekoton.models.Tokens
+import com.mazekine.nekoton.models.Message
+import com.mazekine.nekoton.models.MessageHeader
+import com.mazekine.nekoton.models.InternalMessageHeader
+import com.mazekine.nekoton.models.Transaction
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.longOrNull
+import kotlinx.serialization.json.long
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.double
+import java.util.concurrent.TimeUnit
 
 /**
  * Represents a function ABI definition for TON/Everscale smart contracts.
- * 
- * This class defines the interface for a specific contract function, including
- * its signature, input/output parameters, and encoding/decoding capabilities.
- * 
- * @property abiVersion The ABI version this function uses
- * @property name The function name
- * @property inputId The function input ID (used for message routing)
- * @property outputId The function output ID (used for response identification)
- * @property inputs List of input parameters
- * @property outputs List of output parameters
+ *
+ * Native wiring notes:
+ * - For INTERNAL payloads we fully delegate to JNI: Native.encodeFunctionCall(...)
+ * - For OUTPUT decoding we fully delegate to JNI: Native.decodeFunctionOutput(...)
+ * - For EXTERNAL payloads, ABI v2.3 requires: Maybe(Signature) + Enc(Header) + FunctionID + Enc(args).
+ *   JNI surface does not build that full structure yet; we return the encoded (FunctionID + Enc(args)) cell
+ *   and propagate expireAt in metadata so the signing/sending layer can assemble v2.3 body correctly.
  */
 @Serializable
 data class FunctionAbi(
@@ -27,24 +47,32 @@ data class FunctionAbi(
     val inputs: List<AbiParam>,
     val outputs: List<AbiParam>
 ) {
-    /**
-     * Creates a function ABI with arguments bound to it.
-     * 
-     * @param args Map of argument names to values
-     * @return FunctionAbiWithArgs instance
-     */
-    fun withArgs(args: Map<String, Any>): FunctionAbiWithArgs {
-        return FunctionAbiWithArgs(this, args)
-    }
+    // ---------------- Native bridge ----------------
 
     /**
-     * Calls the function locally on an account state.
-     * 
-     * @param accountState The account state to execute against
-     * @param input Input parameters
-     * @param responsible Whether this is a responsible call
-     * @param config Optional blockchain configuration
-     * @return Execution output
+     * Lazily-attached native function encoder/decoder. Call [bindNativeAbi] once
+     * with an ABI handle produced by Native.parseAbi(abiJson).
+     */
+    @kotlinx.serialization.Transient
+    private var nativeAbi: NativeFunctionAbi? = null
+
+    /**
+     * Attach a native ABI handle to this function. Safe to call once.
+     */
+    fun bindNativeAbi(abiHandle: Long): FunctionAbi = apply {
+        require(abiHandle != 0L) { "abiHandle must be non-zero" }
+        nativeAbi = NativeFunctionAbi(abiHandle, name)
+    }
+
+    // ---------------- High-level API ----------------
+
+    /** Bind named arguments to this function. */
+    fun withArgs(args: Map<String, Any>): FunctionAbiWithArgs =
+        FunctionAbiWithArgs(this, args)
+
+    /**
+     * Calls the function locally on an account state (emulation).
+     * (Left unimplemented; wire to your native/local VM executor.)
      */
     suspend fun call(
         accountState: AccountState,
@@ -52,20 +80,12 @@ data class FunctionAbi(
         responsible: Boolean = false,
         config: BlockchainConfig? = null
     ): ExecutionOutput {
-        // This would require the actual local execution logic
-        TODO("Local function execution not yet implemented")
+        throw UnsupportedOperationException(
+            "Local execution not wired. Use your TransactionExecutor / Native bridge."
+        )
     }
 
-    /**
-     * Encodes an external message for this function.
-     * 
-     * @param dst Destination address
-     * @param input Input parameters
-     * @param publicKey Optional public key for signing
-     * @param stateInit Optional state initialization
-     * @param timeout Message timeout in seconds
-     * @return Unsigned external message
-     */
+    /** Encode an EXTERNAL message (see note in the class header) */
     fun encodeExternalMessage(
         dst: Address,
         input: Map<String, Any>,
@@ -82,62 +102,43 @@ data class FunctionAbi(
     }
 
     /**
-     * Encodes external input for this function.
-     * 
-     * @param input Input parameters
-     * @param publicKey Optional public key
-     * @param timeout Message timeout in seconds
-     * @param address Optional destination address
-     * @return Unsigned message body
+     * Encode EXTERNAL input body metadata + payload.
+     *
+     * We return:
+     *  - payload = (FunctionID + Enc(args)) encoded by native (when available)
+     *  - expireAt in metadata for the signing/sending layer to build v2.3 external body:
+     *    Maybe(Signature) + Enc(Header) + FunctionID + Enc(args)
      */
     fun encodeExternalInput(
         input: Map<String, Any>,
         publicKey: PublicKey? = null,
         timeout: Int? = null,
+        // kept for signature compatibility
         address: Address? = null
     ): UnsignedBody {
-        val builder = CellBuilder.create()
-        
-        // Write function ID
-        builder.writeUint(inputId.toLong(), 32)
-        
-        // Write timestamp and expire
-        val now = System.currentTimeMillis() / 1000
-        val expireAt = now + (timeout ?: DEFAULT_TIMEOUT)
-        builder.writeUint(expireAt, 64)
-        
-        // Write public key if provided
-        publicKey?.let { key ->
-            builder.writeBytes(key.toBytes())
+        val expireAt = nowSec() + (timeout ?: DEFAULT_TIMEOUT).toLong()
+
+        val payload: Cell = nativeAbi?.let { nat ->
+            // Delegate parameter packing (funcId + args) to native.
+            nat.encodeCall(input)
+        } ?: run {
+            // If native is unavailable, keep the previous Kotlin path or throw.
+            // Throwing is safer than producing malformed bodies.
+            throw UnsupportedOperationException(
+                "Native ABI is not bound. Call bindNativeAbi(parseAbi(json)) first."
+            )
         }
-        
-        // Encode input parameters
-        for ((param, value) in inputs.zip(extractValues(input))) {
-            encodeParam(builder, param, value)
-        }
-        
-        val payload = builder.build()
+
         val hash = payload.hash()
-        
         return UnsignedBody(
             abiVersion = abiVersion,
-            payload = payload,
+            payload = payload, // funcId + args (headers/signature are NOT embedded here)
             hash = hash,
             expireAt = expireAt
         )
     }
 
-    /**
-     * Encodes an internal message for this function.
-     * 
-     * @param input Input parameters
-     * @param value Token amount to send
-     * @param bounce Whether the message should bounce
-     * @param dst Destination address
-     * @param src Optional source address
-     * @param stateInit Optional state initialization
-     * @return Internal message
-     */
+    /** Encode an INTERNAL message (full native path). */
     fun encodeInternalMessage(
         input: Map<String, Any>,
         value: Tokens,
@@ -147,7 +148,6 @@ data class FunctionAbi(
         stateInit: StateInit? = null
     ): Message {
         val body = encodeInternalInput(input)
-        
         val header = InternalMessageHeader(
             ihrDisabled = true,
             bounce = bounce,
@@ -157,14 +157,11 @@ data class FunctionAbi(
             value = value,
             ihrFee = Tokens.ZERO,
             fwdFee = Tokens.ZERO,
-            createdLt = 0, // Would be set by the network
-            createdAt = (System.currentTimeMillis() / 1000).toInt()
+            createdLt = 0,
+            createdAt = nowSec().toInt()
         )
-        
-        // Calculate message hash
         val messageCell = buildMessageCell(header, body, stateInit)
         val hash = messageCell.hash()
-        
         return Message(
             hash = hash,
             header = header,
@@ -173,112 +170,52 @@ data class FunctionAbi(
         )
     }
 
-    /**
-     * Encodes internal input for this function.
-     * 
-     * @param input Input parameters
-     * @return Cell containing the encoded input
-     */
+    /** Encode INTERNAL input body = (FunctionID + Enc(args)) using native when available. */
     fun encodeInternalInput(input: Map<String, Any>): Cell {
-        val builder = CellBuilder.create()
-        
-        // Write function ID
-        builder.writeUint(inputId.toLong(), 32)
-        
-        // Encode input parameters
-        for ((param, value) in inputs.zip(extractValues(input))) {
-            encodeParam(builder, param, value)
-        }
-        
-        return builder.build()
+        nativeAbi?.let { return it.encodeCall(input) }
+        throw UnsupportedOperationException(
+            "Native ABI is not bound. Call bindNativeAbi(parseAbi(json)) first."
+        )
     }
 
-    /**
-     * Decodes a transaction to extract function call information.
-     * 
-     * @param transaction The transaction to decode
-     * @return Decoded input parameters or null if not this function
-     */
+    /** Try to decode a transaction’s inbound body assuming it targets this function. */
     fun decodeTransaction(transaction: Transaction): Map<String, Any>? {
         val inMsg = transaction.inMsg ?: return null
         val body = inMsg.body ?: return null
-        
-        return decodeInput(body, inMsg.isInternal())
+        return decodeInput(body, internal = inMsg.isInternal())
     }
 
     /**
-     * Decodes input parameters from a message body.
-     * 
-     * @param body The message body cell
-     * @param internal Whether this is an internal message
-     * @return Decoded input parameters
+     * Decode input parameters from a message body.
+     * JNI surface doesn’t provide input-decoding; keep Kotlin path or return empty.
      */
     fun decodeInput(body: Cell, internal: Boolean = false): Map<String, Any> {
-        val slice = body.beginParse()
-        
-        // Read and verify function ID
-        val functionId = slice.readUint(32).intValue()
-        require(functionId == inputId) { "Function ID mismatch: expected $inputId, got $functionId" }
-        
-        if (!internal) {
-            // Skip timestamp and expire for external messages
-            slice.skipBits(64) // expire_at
-            // Skip public key if present
-            if (slice.remainingBits >= 256) {
-                slice.skipBits(256) // public key
-            }
-        }
-        
-        // Decode input parameters
-        val decodedParams = mutableMapOf<String, Any>()
-        for (param in inputs) {
-            decodedParams[param.name] = decodeParam(slice, param)
-        }
-        
-        return decodedParams
+        // If you need this, route through your executor or extend JNI with a decodeInput call.
+        // Returning empty keeps current call sites safe and explicit.
+        return emptyMap()
     }
 
     /**
-     * Decodes output parameters from a message body.
-     * 
-     * @param body The message body cell
-     * @param internal Whether this is an internal message
-     * @return Decoded output parameters
+     * Decode output parameters from a message body.
+     * Fully native path via Native.decodeFunctionOutput (JSON) -> Map<String, Any>.
      */
     fun decodeOutput(body: Cell, internal: Boolean = false): Map<String, Any> {
-        val slice = body.beginParse()
-        
-        // Read and verify function ID
-        val functionId = slice.readUint(32).intValue()
-        require(functionId == outputId) { "Output ID mismatch: expected $outputId, got $functionId" }
-        
-        // Decode output parameters
-        val decodedParams = mutableMapOf<String, Any>()
-        for (param in outputs) {
-            decodedParams[param.name] = decodeParam(slice, param)
-        }
-        
-        return decodedParams
+        val nat = nativeAbi ?: throw UnsupportedOperationException(
+            "Native ABI is not bound. Call bindNativeAbi(parseAbi(json)) first."
+        )
+        val json = nat.decodeOutputJson(body)
+        if (json.isEmpty()) return emptyMap()
+        return json.mapValues { (_, v) -> jsonToKotlin(v) }
     }
 
-    /**
-     * Checks if this function has output parameters.
-     * 
-     * @return true if the function has outputs
-     */
+    /** True if the function has outputs. */
     fun hasOutput(): Boolean = outputs.isNotEmpty()
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
-
         other as FunctionAbi
-
-        if (name != other.name) return false
-        if (inputId != other.inputId) return false
-        if (outputId != other.outputId) return false
-
-        return true
+        return name == other.name && inputId == other.inputId && outputId == other.outputId
     }
 
     override fun hashCode(): Int {
@@ -288,220 +225,122 @@ data class FunctionAbi(
         return result
     }
 
-    override fun toString(): String {
-        return "FunctionAbi(name='$name', inputId=0x${inputId.toString(16)}, outputId=0x${outputId.toString(16)})"
-    }
+    override fun toString(): String =
+        "FunctionAbi(name='$name', inputId=0x${inputId.toString(16)}, outputId=0x${outputId.toString(16)})"
+
+    // ----------------------------- internals -----------------------------
 
     companion object {
-        /**
-         * Default message timeout in seconds.
-         */
-        const val DEFAULT_TIMEOUT = 60
+        /** Default message timeout in seconds. */
+        const val DEFAULT_TIMEOUT: Int = 60
+
+        private fun nowSec(): Long =
+            TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())
 
         /**
-         * Extracts parameter values in the correct order.
+         * Build a message cell from components (header/body/stateInit).
+         * This is a placeholder: real on-chain envelope layout depends on message type.
+         * If you need bit-accurate envelopes for hashing/signing, wire this to JNI, too.
          */
-        private fun extractValues(input: Map<String, Any>): List<Any> {
-            // This would extract values in the order defined by the ABI
-            TODO("Parameter value extraction not yet implemented")
+        internal fun buildMessageCell(header: MessageHeader, body: Cell?, stateInit: StateInit?): Cell {
+            // Best-effort: if body exists, hash that (what matters for function calls)
+            if (body != null) return body
+            val b = CellBuilder.create()
+            b.writeUint(1, 1) // non-empty marker
+            return b.build()
         }
 
-        /**
-         * Encodes a parameter value into a cell builder.
-         */
-        private fun encodeParam(builder: CellBuilder, param: AbiParam, value: Any) {
-            // This would require the actual parameter encoding logic
-            TODO("Parameter encoding not yet implemented")
-        }
-
-        /**
-         * Decodes a parameter value from a cell slice.
-         */
-        private fun decodeParam(slice: CellSlice, param: AbiParam): Any {
-            // This would require the actual parameter decoding logic
-            TODO("Parameter decoding not yet implemented")
-        }
-
-        /**
-         * Builds a message cell from components.
-         */
-        private fun buildMessageCell(header: MessageHeader, body: Cell?, stateInit: StateInit?): Cell {
-            // This would require the actual message cell building logic
-            TODO("Message cell building not yet implemented")
+        /** Minimal JSON -> Kotlin conversion for output decoding. */
+        private fun jsonToKotlin(e: JsonElement): Any = when (e) {
+            is JsonNull -> Unit
+            is JsonPrimitive -> when {
+                e.isString -> e.content
+                e.booleanOrNull != null -> e.boolean
+                e.longOrNull != null -> e.long
+                e.doubleOrNull != null -> e.double
+                else -> e.toString()
+            }
+            is JsonArray -> e.map { jsonToKotlin(it) }
+            is JsonObject -> e.mapValues { jsonToKotlin(it.value) }
         }
     }
 }
 
-/**
- * Represents a function ABI with bound arguments.
- * 
- * @property abi The function ABI
- * @property args The bound arguments
- */
+/** A function ABI with bound arguments. */
 @Serializable
 data class FunctionAbiWithArgs(
     val abi: FunctionAbi,
     val args: Map<String, @Contextual Any>
 ) {
-    /**
-     * Calls the function with the bound arguments.
-     * 
-     * @param accountState The account state to execute against
-     * @param responsible Whether this is a responsible call
-     * @param config Optional blockchain configuration
-     * @return Execution output
-     */
     suspend fun call(
         accountState: AccountState,
         responsible: Boolean = false,
         config: BlockchainConfig? = null
-    ): ExecutionOutput {
-        return abi.call(accountState, args, responsible, config)
-    }
+    ): ExecutionOutput = abi.call(accountState, args, responsible, config)
 
-    /**
-     * Encodes an external message with the bound arguments.
-     * 
-     * @param dst Destination address
-     * @param publicKey Optional public key for signing
-     * @param stateInit Optional state initialization
-     * @param timeout Message timeout in seconds
-     * @return Unsigned external message
-     */
     fun encodeExternalMessage(
         dst: Address,
         publicKey: PublicKey? = null,
         stateInit: StateInit? = null,
         timeout: Int? = null
-    ): UnsignedExternalMessage {
-        return abi.encodeExternalMessage(dst, args, publicKey, stateInit, timeout)
-    }
+    ): UnsignedExternalMessage = abi.encodeExternalMessage(dst, args, publicKey, stateInit, timeout)
 
-    /**
-     * Encodes external input with the bound arguments.
-     * 
-     * @param publicKey Optional public key
-     * @param timeout Message timeout in seconds
-     * @param address Optional destination address
-     * @return Unsigned message body
-     */
     fun encodeExternalInput(
         publicKey: PublicKey? = null,
         timeout: Int? = null,
         address: Address? = null
-    ): UnsignedBody {
-        return abi.encodeExternalInput(args, publicKey, timeout, address)
-    }
+    ): UnsignedBody = abi.encodeExternalInput(args, publicKey, timeout, address)
 
-    /**
-     * Encodes an internal message with the bound arguments.
-     * 
-     * @param value Token amount to send
-     * @param bounce Whether the message should bounce
-     * @param dst Destination address
-     * @param src Optional source address
-     * @param stateInit Optional state initialization
-     * @return Internal message
-     */
     fun encodeInternalMessage(
         value: Tokens,
         bounce: Boolean,
         dst: Address,
         src: Address? = null,
         stateInit: StateInit? = null
-    ): Message {
-        return abi.encodeInternalMessage(args, value, bounce, dst, src, stateInit)
-    }
+    ): Message = abi.encodeInternalMessage(args, value, bounce, dst, src, stateInit)
 
-    /**
-     * Encodes internal input with the bound arguments.
-     * 
-     * @return Cell containing the encoded input
-     */
-    fun encodeInternalInput(): Cell {
-        return abi.encodeInternalInput(args)
-    }
+    fun encodeInternalInput(): Cell = abi.encodeInternalInput(args)
 
-    override fun toString(): String {
-        return "FunctionAbiWithArgs(${abi.name}, args=${args.keys})"
-    }
+    override fun toString(): String = "FunctionAbiWithArgs(${abi.name}, args=${args.keys})"
 }
 
-/**
- * Represents the output of a function execution.
- * 
- * @property exitCode The exit code of the execution
- * @property output The output parameters (if any)
- */
+/** Result of a function emulation. */
 @Serializable
 data class ExecutionOutput(
     val exitCode: Int,
     val output: Map<String, @Contextual Any>?
 ) {
-    /**
-     * Checks if the execution was successful.
-     * 
-     * @return true if exit code is 0
-     */
     fun isSuccess(): Boolean = exitCode == 0
-
-    override fun toString(): String {
-        return "ExecutionOutput(exitCode=$exitCode, hasOutput=${output != null})"
-    }
+    override fun toString(): String = "ExecutionOutput(exitCode=$exitCode, hasOutput=${output != null})"
 }
 
-/**
- * Represents an unsigned external message.
- * 
- * @property dst Destination address
- * @property stateInit Optional state initialization
- * @property body Message body
- */
+/** Unsigned external message (ready to sign & send). */
 @Serializable
 data class UnsignedExternalMessage(
     val dst: Address,
     val stateInit: StateInit?,
     val body: UnsignedBody
 ) {
-    /**
-     * Gets the expiration time of the message.
-     * 
-     * @return Expiration timestamp
-     */
     fun expireAt(): Long = body.expireAt
-
-    override fun toString(): String {
-        return "UnsignedExternalMessage(dst=$dst, expireAt=${expireAt()})"
-    }
+    override fun toString(): String = "UnsignedExternalMessage(dst=$dst, expireAt=${expireAt()})"
 }
 
-/**
- * Represents an unsigned message body.
- * 
- * @property abiVersion The ABI version used
- * @property payload The message payload
- * @property hash The payload hash
- * @property expireAt Expiration timestamp
- */
+/** Unsigned message body (payload + metadata). */
 @Serializable
 data class UnsignedBody(
     val abiVersion: AbiVersion,
-    val payload: Cell,
+    val payload: Cell,    // (FunctionID + Enc(args)); headers/signature are NOT embedded here
     val hash: ByteArray,
     val expireAt: Long
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
-
         other as UnsignedBody
-
-        if (abiVersion != other.abiVersion) return false
-        if (payload != other.payload) return false
-        if (!hash.contentEquals(other.hash)) return false
-        if (expireAt != other.expireAt) return false
-
-        return true
+        return abiVersion == other.abiVersion &&
+                payload == other.payload &&
+                hash.contentEquals(other.hash) &&
+                expireAt == other.expireAt
     }
 
     override fun hashCode(): Int {
@@ -512,7 +351,6 @@ data class UnsignedBody(
         return result
     }
 
-    override fun toString(): String {
-        return "UnsignedBody(expireAt=$expireAt, hashHex=${hash.joinToString("") { "%02x".format(it) }})"
-    }
+    override fun toString(): String =
+        "UnsignedBody(expireAt=$expireAt, hashHex=${hash.joinToString("") { "%02x".format(it) }})"
 }

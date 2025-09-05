@@ -1,12 +1,10 @@
-import org.gradle.jvm.tasks.Jar
 import org.gradle.api.publish.maven.tasks.GenerateMavenPom
 import org.gradle.api.tasks.bundling.Zip
-import org.jetbrains.kotlin.konan.properties.saveToFile
-import java.security.MessageDigest
+import org.gradle.jvm.tasks.Jar
 import java.io.File
-import java.io.ByteArrayOutputStream
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.security.MessageDigest
 import java.util.Properties
 
 plugins {
@@ -50,7 +48,7 @@ java {
 
 kotlin {
     jvmToolchain(23)
-    
+
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
         freeCompilerArgs.add("-Xjsr305=strict")
@@ -67,32 +65,32 @@ dependencies {
     // Kotlin standard libraries
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
-    
+
     // Coroutines for async operations
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.8.1")
-    
+
     // Serialization for JSON handling
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
-    
+
     // HTTP client for transport
     implementation("io.ktor:ktor-client-core:2.3.12")
     implementation("io.ktor:ktor-client-cio:2.3.12")
     implementation("io.ktor:ktor-client-content-negotiation:2.3.12")
     implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.12")
     implementation("io.ktor:ktor-client-logging:2.3.12")
-    
+
     // Crypto libraries
     implementation("org.bouncycastle:bcprov-jdk18on:1.78.1")
     implementation("org.bouncycastle:bcpkix-jdk18on:1.78.1")
-    
+
     // BigInteger support
     implementation("com.ionspin.kotlin:bignum:0.3.10")
-    
+
     // Logging
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.0")
     implementation("ch.qos.logback:logback-classic:1.5.6")
-    
+
     // Testing
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
@@ -105,7 +103,7 @@ dependencies {
 tasks.register<Exec>("buildRustLibrary") {
     workingDir = file("nekoton-jni")
     commandLine("bash", "-lc", "cargo build --release")
-    
+
     inputs.dir("nekoton-jni/src")
     inputs.file("nekoton-jni/Cargo.toml")
     outputs.file("nekoton-jni/target/release/libnekoton_jni.so")
@@ -148,26 +146,25 @@ val sourcesJar by tasks.registering(Jar::class) {
     from(sourceSets.main.get().allSource)
 }
 
-
 publishing {
     publications {
         create<MavenPublication>("maven") {
             from(components["java"])
             artifact(sourcesJar)
             artifact(javadocJar)
-            
+
             pom {
                 name.set("Nekoton Kotlin")
                 description.set("Kotlin bindings for Nekoton - Broxus SDK with TIP3 wallets support")
                 url.set("https://github.com/mazekine/nekoton-kotlin")
-                
+
                 licenses {
                     license {
                         name.set("Apache License 2.0")
                         url.set("https://opensource.org/licenses/Apache-2.0")
                     }
                 }
-                
+
                 developers {
                     developer {
                         id.set("com.mazekine")
@@ -175,7 +172,7 @@ publishing {
                         organization.set("Mazekine")
                     }
                 }
-                
+
                 scm {
                     connection.set("scm:git:git://github.com/mazekine/nekoton-kotlin.git")
                     developerConnection.set("scm:git:ssh://github.com:mazekine/nekoton-kotlin.git")
@@ -197,7 +194,12 @@ publishing {
         }
         maven {
             name = "bundle"
-            url = layout.buildDirectory.dir("central-repo").get().asFile.toURI()
+            url =
+                layout.buildDirectory
+                    .dir("central-repo")
+                    .get()
+                    .asFile
+                    .toURI()
         }
     }
 }
@@ -215,8 +217,8 @@ val generatePomProperties by tasks.registering {
     doLast {
         props.get().asFile.writeText(
             "version=${project.version}\n" +
-            "groupId=${project.group}\n" +
-            "artifactId=${project.name}\n"
+                "groupId=${project.group}\n" +
+                "artifactId=${project.name}\n",
         )
     }
 }
@@ -244,10 +246,16 @@ val generateChecksums by tasks.registering {
         bundleRepoDir.map { it.dir(groupPath) }.get().asFile.listFiles()?.forEach { file ->
             if (file.isFile && !file.name.endsWith(".asc") && !file.name.endsWith(".md5") && !file.name.endsWith(".sha1")) {
                 val bytes = file.readBytes()
-                val sha1 = MessageDigest.getInstance("SHA-1").digest(bytes)
-                    .joinToString("") { "%02x".format(it) }
-                val md5 = MessageDigest.getInstance("MD5").digest(bytes)
-                    .joinToString("") { "%02x".format(it) }
+                val sha1 =
+                    MessageDigest
+                        .getInstance("SHA-1")
+                        .digest(bytes)
+                        .joinToString("") { "%02x".format(it) }
+                val md5 =
+                    MessageDigest
+                        .getInstance("MD5")
+                        .digest(bytes)
+                        .joinToString("") { "%02x".format(it) }
                 File(file.parentFile, "${file.name}.sha1").writeText(sha1)
                 File(file.parentFile, "${file.name}.md5").writeText(md5)
             }
