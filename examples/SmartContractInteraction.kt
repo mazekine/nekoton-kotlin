@@ -77,7 +77,7 @@ class SmartContractInteraction {
         
         // 2. Contract and wallet setup
         val walletKeyPair = KeyPair.generate()
-        val contractAddress = Address("0:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef")
+        val contractAddress = Address("0:6bfe535f0b054fcd04f2a5c8c70bbbcb5e8f339d44b499a0307b69e7545c4241")
         val recipientAddress = Address("0:abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890")
         
         // 3. Get token details

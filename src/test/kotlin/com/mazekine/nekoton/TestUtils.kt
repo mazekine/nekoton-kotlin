@@ -3,6 +3,7 @@ package com.mazekine.nekoton
 import com.mazekine.nekoton.crypto.KeyPair
 import com.mazekine.nekoton.models.Address
 import com.mazekine.nekoton.models.CellBuilder
+import com.mazekine.nekoton.models.Cell
 import kotlin.random.Random
 
 object TestUtils {
@@ -16,7 +17,7 @@ object TestUtils {
         return KeyPair.generate()
     }
     
-    fun createTestCell(data: ByteArray): com.mazekine.nekoton.models.Cell {
+    fun createTestCell(data: ByteArray): Cell {
         val builder = CellBuilder()
         builder.writeBytes(data)
         return builder.build()
@@ -24,8 +25,8 @@ object TestUtils {
     
     fun createTestCellWithReferences(
         data: ByteArray,
-        references: List<com.mazekine.nekoton.models.Cell>
-    ): com.mazekine.nekoton.models.Cell {
+        references: List<Cell>
+    ): Cell {
         val builder = CellBuilder()
         builder.writeBytes(data)
         references.forEach { builder.writeRef(it) }

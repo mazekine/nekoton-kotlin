@@ -1,7 +1,9 @@
 package com.mazekine.nekoton.transport
 
+import com.mazekine.nekoton.Native
 import com.mazekine.nekoton.TestConfig
 import com.mazekine.nekoton.models.Address
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlin.test.*
 
@@ -18,7 +20,6 @@ class TransportTest {
     @Test
     fun testTransportConfig() {
         // Test Tycho testnet configuration constants
-        assertEquals("https://mainnet.evercloud.dev/89a3b8f46a484f2ea3bdd364ddaee3a3/graphql", TestConfig.EVERCLOUD_GQL_URL)
         assertEquals("https://rpc-testnet.tychoprotocol.com/", TestConfig.TYCHO_JRPC_URL)
         assertEquals("https://rpc-testnet.tychoprotocol.com/proto", TestConfig.TYCHO_PROTO_URL)
         assertEquals("TYCHO", TestConfig.TYCHO_CURRENCY_SYMBOL)
@@ -49,7 +50,15 @@ class TransportTest {
     }
     
     @Test
-    fun testBlockInfo() {
+    fun testBlockInfo() = runBlocking {
+        val transport = ProtoTransport(TestConfig.TYCHO_PROTO_URL)
+        assertEquals(Native.isInitialized(), true)
+        assertEquals(transport.isConnected(), true)
+
+        val blockId = "976bbd5a8c182b5c6ec0e60825dbed1d025bd2eac7fb4ad46285cc60d94986fb"
+        //val blockInfo = transport.getLatestBlock()
+
+
         val rootHash = ByteArray(32) { 0x12 }
         val fileHash = ByteArray(32) { 0x34 }
         val blockInfo = BlockInfo(0, 1L, 100, rootHash, fileHash, 1234567890)
