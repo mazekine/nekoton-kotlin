@@ -11,6 +11,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
+import java.io.File
 
 /**
  * Represents a contract ABI (Application Binary Interface) for TON/Everscale smart contracts.

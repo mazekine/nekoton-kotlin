@@ -46,3 +46,6 @@ coverage/
 local.properties
 /maven.sh
 maven_bundle.sh
+
+# Rust
+nekoton-jni/target/
