@@ -11,8 +11,6 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.decodeFromString
-import java.io.File
 
 /**
  * Represents a contract ABI (Application Binary Interface) for TON/Everscale smart contracts.
@@ -50,6 +48,9 @@ data class ContractAbi(
             try {
                 nativeHandle = Native.parseAbi(abiJson)
                 isNativeInitialized = nativeHandle != 0L
+                if (isNativeInitialized) {
+                    functions.values.forEach { it.bindNativeAbi(nativeHandle) }
+                }
             } catch (e: Exception) {
                 isNativeInitialized = false
             }
@@ -62,26 +63,10 @@ data class ContractAbi(
      * @param name The function name
      * @return FunctionAbi instance or null if not found
      */
-    fun getFunction(name: String): FunctionAbi? {
-        return if (isNativeInitialized) {
-            try {
-                val functionNamesBytes = Native.getAbiFunctionNames(nativeHandle)
-                val functionNamesJson = String(functionNamesBytes)
-                val functionNames = Json.decodeFromString<List<String>>(functionNamesJson)
-                
-                if (functionNames.contains(name)) {
-                    // For now, return the regular function ABI since NativeFunctionAbi doesn't extend FunctionAbi
-                    functions[name]
-                } else {
-                    null
-                }
-            } catch (e: Exception) {
-                functions[name]
-            }
-        } else {
-            functions[name]
+    fun getFunction(name: String): FunctionAbi? =
+        functions[name]?.also { fn ->
+            if (isNativeInitialized) fn.bindNativeAbi(nativeHandle)
         }
-    }
 
     /**
      * Gets an event ABI by name.

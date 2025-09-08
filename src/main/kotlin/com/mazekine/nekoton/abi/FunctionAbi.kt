@@ -56,6 +56,10 @@ data class FunctionAbi(
     @kotlinx.serialization.Transient
     private var nativeAbi: NativeFunctionAbi? = null
 
+    /** Helper to access bound native ABI or throw a consistent error. */
+    private fun requireNative(): NativeFunctionAbi =
+        nativeAbi ?: error("Native ABI is not bound. Call bindNativeAbi(parseAbi(json)) first.")
+
     /**
      * Attach a native ABI handle to this function. Safe to call once.
      */
@@ -118,16 +122,8 @@ data class FunctionAbi(
     ): UnsignedBody {
         val expireAt = nowSec() + (timeout ?: DEFAULT_TIMEOUT).toLong()
 
-        val payload: Cell = nativeAbi?.let { nat ->
-            // Delegate parameter packing (funcId + args) to native.
-            nat.encodeCall(input)
-        } ?: run {
-            // If native is unavailable, keep the previous Kotlin path or throw.
-            // Throwing is safer than producing malformed bodies.
-            throw UnsupportedOperationException(
-                "Native ABI is not bound. Call bindNativeAbi(parseAbi(json)) first."
-            )
-        }
+        // Delegate parameter packing (funcId + args) to native.
+        val payload: Cell = requireNative().encodeCall(input)
 
         val hash = payload.hash()
         return UnsignedBody(
@@ -172,10 +168,7 @@ data class FunctionAbi(
 
     /** Encode INTERNAL input body = (FunctionID + Enc(args)) using native when available. */
     fun encodeInternalInput(input: Map<String, Any>): Cell {
-        nativeAbi?.let { return it.encodeCall(input) }
-        throw UnsupportedOperationException(
-            "Native ABI is not bound. Call bindNativeAbi(parseAbi(json)) first."
-        )
+        return requireNative().encodeCall(input)
     }
 
     /** Try to decode a transaction’s inbound body assuming it targets this function. */
@@ -200,10 +193,7 @@ data class FunctionAbi(
      * Fully native path via Native.decodeFunctionOutput (JSON) -> Map<String, Any>.
      */
     fun decodeOutput(body: Cell, internal: Boolean = false): Map<String, Any> {
-        val nat = nativeAbi ?: throw UnsupportedOperationException(
-            "Native ABI is not bound. Call bindNativeAbi(parseAbi(json)) first."
-        )
-        val json = nat.decodeOutputJson(body)
+        val json = requireNative().decodeOutputJson(body)
         if (json.isEmpty()) return emptyMap()
         return json.mapValues { (_, v) -> jsonToKotlin(v) }
     }
