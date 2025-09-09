@@ -3,7 +3,6 @@ package com.mazekine.nekoton.abi
 import com.mazekine.nekoton.Native
 import com.mazekine.nekoton.models.Cell
 import kotlinx.serialization.DeserializationStrategy
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
 import kotlinx.serialization.serializer

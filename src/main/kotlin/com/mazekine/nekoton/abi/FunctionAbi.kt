@@ -1,6 +1,5 @@
 package com.mazekine.nekoton.abi
 
-import com.mazekine.nekoton.Native
 import com.mazekine.nekoton.crypto.PublicKey
 import com.mazekine.nekoton.models.AccountState
 import com.mazekine.nekoton.models.BlockchainConfig
@@ -29,7 +28,7 @@ import kotlinx.serialization.json.double
 import java.util.concurrent.TimeUnit
 
 /**
- * Represents a function ABI definition for TON/Everscale smart contracts.
+ * Represents a function ABI definition for TON/Tycho smart contracts.
  *
  * Native wiring notes:
  * - For INTERNAL payloads we fully delegate to JNI: Native.encodeFunctionCall(...)

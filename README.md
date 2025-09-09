@@ -4,6 +4,7 @@
 ![Kotlin Version](https://img.shields.io/badge/kotlin-2.0.21-blue?style=plastic)
 ![Gradle Version](https://img.shields.io/badge/gradle-8.12-green?style=plastic)
 ![Java Version](https://img.shields.io/badge/java-17+-purple?style=plastic)
+![Experimental](https://img.shields.io/badge/Experimental-red?style=plastic)
 
 Kotlin bindings for [Nekoton](https://github.com/broxus/nekoton) – a universal TVM library covering TON, Everscale, Venom, and any Tycho‑based networks, with TIP3/Jetton wallet support.
 

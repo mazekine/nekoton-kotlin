@@ -325,20 +325,20 @@ data class ContractAbi(
          */
         @Suppress("UNCHECKED_CAST")
         private fun encodeParam(builder: CellBuilder, param: AbiParam, value: Any?) {
-            val type = AbiType.fromString(param.type)
+            val type = AbiParamType.fromString(param.type)
             when (type) {
-                AbiType.UINT -> {
+                AbiParamType.UINT -> {
                     val bits = AbiTypeUtils.getIntegerBitSize(param.type)
                     val intValue = toBigInteger(value!!)
                     builder.writeUint(intValue, bits)
                 }
-                AbiType.INT -> {
+                AbiParamType.INT -> {
                     val bits = AbiTypeUtils.getIntegerBitSize(param.type)
                     val intValue = toBigInteger(value!!)
                     builder.writeInt(intValue, bits)
                 }
-                AbiType.BOOL -> builder.writeBit(value as Boolean)
-                AbiType.BYTES -> {
+                AbiParamType.BOOL -> builder.writeBit(value as Boolean)
+                AbiParamType.BYTES -> {
                     val bytes = when (value) {
                         is ByteArray -> value
                         is String -> value.toByteArray()
@@ -347,7 +347,7 @@ data class ContractAbi(
                     builder.writeUint(bytes.size.toLong(), 32)
                     builder.writeBytes(bytes)
                 }
-                AbiType.BYTES_FIXED -> {
+                AbiParamType.BYTES_FIXED -> {
                     val size = AbiTypeUtils.getFixedBytesSize(param.type)
                     val bytes = when (value) {
                         is ByteArray -> value
@@ -357,13 +357,13 @@ data class ContractAbi(
                     require(bytes.size == size) { "Invalid byte array size for ${param.name}" }
                     builder.writeBytes(bytes)
                 }
-                AbiType.STRING -> {
+                AbiParamType.STRING -> {
                     val bytes = value.toString().toByteArray()
                     // Strings are encoded with a 32-bit length prefix followed by UTF-8 bytes
                     builder.writeUint(bytes.size.toLong(), 32)
                     builder.writeBytes(bytes)
                 }
-                AbiType.ADDRESS -> {
+                AbiParamType.ADDRESS -> {
                     val addr = when (value) {
                         is Address -> value
                         is String -> Address(value)
@@ -372,8 +372,8 @@ data class ContractAbi(
                     }
                     builder.writeAddress(addr)
                 }
-                AbiType.CELL -> builder.writeRef(value as Cell)
-                AbiType.GRAMS -> {
+                AbiParamType.CELL -> builder.writeRef(value as Cell)
+                AbiParamType.GRAMS -> {
                     val tokens = when (value) {
                         is Tokens -> value
                         is String -> Tokens(value)
@@ -383,7 +383,7 @@ data class ContractAbi(
                     }
                     builder.writeTokens(tokens)
                 }
-                AbiType.TUPLE -> {
+                AbiParamType.TUPLE -> {
                     val map = when (value) {
                         is Map<*, *> -> value as Map<String, Any?>
                         else -> throw IllegalArgumentException("Tuple value must be a map")
@@ -393,7 +393,7 @@ data class ContractAbi(
                         encodeParam(builder, comp, v)
                     }
                 }
-                AbiType.ARRAY -> {
+                AbiParamType.ARRAY -> {
                     val list = when (value) {
                         is List<*> -> value as List<Any?>
                         else -> throw IllegalArgumentException("Array value must be a list")
@@ -402,7 +402,7 @@ data class ContractAbi(
                     val component = param.components?.firstOrNull() ?: AbiParam(param.name, param.getBaseType())
                     list.forEach { v -> encodeParam(builder, component, v) }
                 }
-                AbiType.OPTIONAL -> {
+                AbiParamType.OPTIONAL -> {
                     if (value == null) {
                         builder.writeBit(false)
                     } else {
@@ -411,7 +411,7 @@ data class ContractAbi(
                         encodeParam(builder, innerType, value)
                     }
                 }
-                AbiType.MAP -> {
+                AbiParamType.MAP -> {
                     val map = value as Map<*, *>
                     builder.writeUint(map.size.toLong(), 32)
                     val (keyType, valueType) = AbiTypeUtils.parseMapType(param.type)
@@ -433,54 +433,54 @@ data class ContractAbi(
          * @return Decoded value
          */
         private fun decodeParam(slice: CellSlice, param: AbiParam): Any? {
-            val type = AbiType.fromString(param.type)
+            val type = AbiParamType.fromString(param.type)
             return when (type) {
-                AbiType.UINT -> {
+                AbiParamType.UINT -> {
                     val bits = AbiTypeUtils.getIntegerBitSize(param.type)
                     slice.readUint(bits)
                 }
-                AbiType.INT -> {
+                AbiParamType.INT -> {
                     val bits = AbiTypeUtils.getIntegerBitSize(param.type)
                     slice.readInt(bits)
                 }
-                AbiType.BOOL -> slice.readBit()
-                AbiType.BYTES -> {
+                AbiParamType.BOOL -> slice.readBit()
+                AbiParamType.BYTES -> {
                     val len = slice.readUint(32).intValue()
                     slice.readBytes(len)
                 }
-                AbiType.BYTES_FIXED -> {
+                AbiParamType.BYTES_FIXED -> {
                     val size = AbiTypeUtils.getFixedBytesSize(param.type)
                     slice.readBytes(size)
                 }
-                AbiType.STRING -> {
+                AbiParamType.STRING -> {
                     val len = slice.readUint(32).intValue()
                     String(slice.readBytes(len))
                 }
-                AbiType.ADDRESS -> slice.readAddress()
-                AbiType.CELL -> slice.readRef()
-                AbiType.GRAMS -> Tokens(slice.readVarUint(4))
-                AbiType.TUPLE -> {
+                AbiParamType.ADDRESS -> slice.readAddress()
+                AbiParamType.CELL -> slice.readRef()
+                AbiParamType.GRAMS -> Tokens(slice.readVarUint(4))
+                AbiParamType.TUPLE -> {
                     val map = mutableMapOf<String, Any?>()
                     param.components?.forEach { comp ->
                         map[comp.name] = decodeParam(slice, comp)
                     }
                     map
                 }
-                AbiType.ARRAY -> {
+                AbiParamType.ARRAY -> {
                     val length = slice.readUint(32).intValue()
                     val list = mutableListOf<Any?>()
                     val component = param.components?.firstOrNull() ?: AbiParam(param.name, param.getBaseType())
                     repeat(length) { list.add(decodeParam(slice, component)) }
                     list
                 }
-                AbiType.OPTIONAL -> {
+                AbiParamType.OPTIONAL -> {
                     val has = slice.readBit()
                     if (!has) null else {
                         val innerType = AbiParam(param.name, AbiTypeUtils.parseOptionalType(param.type), param.components)
                         decodeParam(slice, innerType)
                     }
                 }
-                AbiType.MAP -> {
+                AbiParamType.MAP -> {
                     val size = slice.readUint(32).intValue()
                     val result = mutableMapOf<Any?, Any?>()
                     val (keyType, valueType) = AbiTypeUtils.parseMapType(param.type)
