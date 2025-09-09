@@ -7,7 +7,6 @@ import com.ionspin.kotlin.bignum.integer.BigInteger
 import com.mazekine.nekoton.abi.param.AbiParam
 import com.mazekine.nekoton.abi.param.AbiParamType
 import com.mazekine.nekoton.abi.param.AbiTypeUtils
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -267,7 +266,7 @@ data class ContractAbi(
                 AbiVersion.parse(it)
             } ?: json["ABI version"]?.jsonPrimitive?.content?.let {
                 AbiVersion.parse(it)
-            } ?: AbiVersion(1, 0)
+            } ?: AbiVersion(2, 0)
             
             // Parse functions
             val functions = mutableMapOf<String, FunctionAbi>()
@@ -574,49 +573,3 @@ data class ContractAbi(
     }
 }
 
-/**
- * Represents an ABI version with major and minor components.
- *
- * Examples: 2.0, 2.1, 2.2, 2.3
- */
-@Serializable
-data class AbiVersion(val major: Int, val minor: Int = 0) {
-    override fun toString(): String = "$major.$minor"
-
-    companion object {
-        /** Predefined known versions */
-        val V2_0 = AbiVersion(2, 0)
-        val V2_1 = AbiVersion(2, 1)
-        val V2_2 = AbiVersion(2, 2)
-        val V2_3 = AbiVersion(2, 3)
-
-        /** Parses version strings like "2", "2.2", "2.3" */
-        fun parse(value: String): AbiVersion {
-            val parts = value.trim().split('.')
-            val major = parts.getOrNull(0)?.toIntOrNull() ?: 0
-            val minor = parts.getOrNull(1)?.toIntOrNull() ?: 0
-            return AbiVersion(major, minor)
-        }
-    }
-}
-
-/**
- * Represents a function call with input and output data.
- * 
- * @property function The function ABI
- * @property input Input parameters
- * @property output Output parameters
- */
-@Serializable
-data class FunctionCall(
-    val function: FunctionAbi,
-    val input: Map<String, @Contextual Any>,
-    val output: Map<String, @Contextual Any>
-){
-    /**
-     * Returns a human-readable representation of this call.
-     */
-    override fun toString(): String {
-        return "FunctionCall(${function.name}, input=${input.keys}, output=${output.keys})"
-    }
-}
