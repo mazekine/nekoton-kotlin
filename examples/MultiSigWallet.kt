@@ -71,7 +71,7 @@ class MultiSigWallet {
         val payload = builder.build()
 
         return UnsignedBody(
-            abiVersion = AbiVersion(2),
+            abiVersion = AbiVersion(2, 3),
             payload = payload,
             hash = payload.hash(),
             expireAt = System.currentTimeMillis() / 1000 + 60
