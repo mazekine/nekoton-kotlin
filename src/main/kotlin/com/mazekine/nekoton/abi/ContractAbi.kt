@@ -92,19 +92,35 @@ data class ContractAbi(
         publicKey: PublicKey? = null,
         existingData: Cell? = null
     ): Cell {
+        // Merge provided data with existing data (if any)
+        val mergedData = mutableMapOf<String, Any?>()
+        var finalPublicKey = publicKey
+
+        existingData?.let { cell ->
+            val (existingKey, existingFields) = decodeInitData(cell)
+            if (finalPublicKey == null) {
+                finalPublicKey = existingKey
+            }
+            mergedData.putAll(existingFields)
+        }
+
+        // Override with explicitly provided data
+        mergedData.putAll(data)
+
         val builder = CellBuilder.create()
-        
-        // Add public key if provided
-        publicKey?.let { key ->
+
+        // Add public key if available
+        finalPublicKey?.let { key ->
             builder.writeBytes(key.toBytes())
         }
-        
-        // Add data parameters
+
+        // Encode data parameters in ABI order
         for ((paramName, param) in this.data) {
-            val value = data[paramName] ?: throw IllegalArgumentException("Parameter '$paramName' not found")
+            val value = mergedData[paramName]
+                ?: throw IllegalArgumentException("Parameter '$paramName' not found")
             encodeParam(builder, param, value)
         }
-        
+
         return builder.build()
     }
 
