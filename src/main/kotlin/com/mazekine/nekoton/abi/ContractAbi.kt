@@ -261,10 +261,13 @@ data class ContractAbi(
         private fun parseAbiJson(abiJson: String): ContractAbi {
             val json = Json.parseToJsonElement(abiJson).jsonObject
             
-            // Parse ABI version
-            val abiVersion = json["ABI version"]?.let { 
-                AbiVersion(it.toString().toInt()) 
-            } ?: AbiVersion(1)
+            // Parse ABI version. Prefer full semantic version from `version` field,
+            // fall back to numeric `ABI version` if present.
+            val abiVersion = json["version"]?.jsonPrimitive?.content?.let {
+                AbiVersion.parse(it)
+            } ?: json["ABI version"]?.jsonPrimitive?.content?.let {
+                AbiVersion.parse(it)
+            } ?: AbiVersion(1, 0)
             
             // Parse functions
             val functions = mutableMapOf<String, FunctionAbi>()
@@ -572,16 +575,29 @@ data class ContractAbi(
 }
 
 /**
- * Represents an ABI version.
- * 
- * @property version The version number
+ * Represents an ABI version with major and minor components.
+ *
+ * Examples: 2.0, 2.1, 2.2, 2.3
  */
 @Serializable
-data class AbiVersion(val version: Int) {
-    /**
-     * Returns the version number as a string.
-     */
-    override fun toString(): String = version.toString()
+data class AbiVersion(val major: Int, val minor: Int = 0) {
+    override fun toString(): String = "$major.$minor"
+
+    companion object {
+        /** Predefined known versions */
+        val V2_0 = AbiVersion(2, 0)
+        val V2_1 = AbiVersion(2, 1)
+        val V2_2 = AbiVersion(2, 2)
+        val V2_3 = AbiVersion(2, 3)
+
+        /** Parses version strings like "2", "2.2", "2.3" */
+        fun parse(value: String): AbiVersion {
+            val parts = value.trim().split('.')
+            val major = parts.getOrNull(0)?.toIntOrNull() ?: 0
+            val minor = parts.getOrNull(1)?.toIntOrNull() ?: 0
+            return AbiVersion(major, minor)
+        }
+    }
 }
 
 /**

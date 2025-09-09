@@ -22,7 +22,8 @@ class ContractAbiTest {
         val abi = ContractAbi(abiJson)
         
         assertNotNull(abi)
-        assertEquals(2, abi.abiVersion.version)
+        assertEquals(2, abi.abiVersion.major)
+        assertEquals(3, abi.abiVersion.minor)
         // Note: Function parsing not yet implemented
         assertNotNull(abi.functions)
         
@@ -38,7 +39,8 @@ class ContractAbiTest {
         val abi = ContractAbi(abiJson)
         
         assertNotNull(abi)
-        assertEquals(2, abi.abiVersion.version)
+        assertEquals(2, abi.abiVersion.major)
+        assertEquals(0, abi.abiVersion.minor)
         // Note: Function and event parsing not yet implemented
         assertNotNull(abi.functions)
         assertNotNull(abi.events)
@@ -57,7 +59,8 @@ class ContractAbiTest {
         val abi = ContractAbi(abiJson)
         
         assertNotNull(abi)
-        assertEquals(2, abi.abiVersion.version)
+        assertEquals(2, abi.abiVersion.major)
+        assertEquals(2, abi.abiVersion.minor)
         // Note: Function parsing not yet implemented
         assertNotNull(abi.functions)
         
@@ -122,7 +125,7 @@ class ContractAbiTest {
         val abi1 = ContractAbi(abiJson)
         val abi2 = ContractAbi(abiJson)
         
-        assertEquals(abi1.abiVersion.version, abi2.abiVersion.version)
+        assertEquals(abi1.abiVersion, abi2.abiVersion)
         assertEquals(abi1.functions.size, abi2.functions.size)
     }
     
