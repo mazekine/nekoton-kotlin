@@ -4,6 +4,9 @@ import com.mazekine.nekoton.Native
 import com.mazekine.nekoton.crypto.PublicKey
 import com.mazekine.nekoton.models.*
 import com.ionspin.kotlin.bignum.integer.BigInteger
+import com.mazekine.nekoton.abi.param.AbiParam
+import com.mazekine.nekoton.abi.param.AbiParamType
+import com.mazekine.nekoton.abi.param.AbiTypeUtils
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -407,7 +410,8 @@ data class ContractAbi(
                         builder.writeBit(false)
                     } else {
                         builder.writeBit(true)
-                        val innerType = AbiParam(param.name, AbiTypeUtils.parseOptionalType(param.type), param.components)
+                        val innerType =
+                            AbiParam(param.name, AbiTypeUtils.parseOptionalType(param.type), param.components)
                         encodeParam(builder, innerType, value)
                     }
                 }
@@ -476,7 +480,8 @@ data class ContractAbi(
                 AbiParamType.OPTIONAL -> {
                     val has = slice.readBit()
                     if (!has) null else {
-                        val innerType = AbiParam(param.name, AbiTypeUtils.parseOptionalType(param.type), param.components)
+                        val innerType =
+                            AbiParam(param.name, AbiTypeUtils.parseOptionalType(param.type), param.components)
                         decodeParam(slice, innerType)
                     }
                 }

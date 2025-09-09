@@ -1,4 +1,4 @@
-package com.mazekine.nekoton.abi
+package com.mazekine.nekoton.abi.param
 
 /**
  * Utility class for ABI type operations.

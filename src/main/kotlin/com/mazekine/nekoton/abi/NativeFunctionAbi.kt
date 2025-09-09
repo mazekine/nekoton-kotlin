@@ -1,6 +1,7 @@
 package com.mazekine.nekoton.abi
 
 import com.mazekine.nekoton.Native
+import com.mazekine.nekoton.abi.param.AbiParam
 import com.mazekine.nekoton.models.Cell
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.encodeToString

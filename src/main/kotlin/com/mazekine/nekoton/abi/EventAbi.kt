@@ -1,5 +1,6 @@
 package com.mazekine.nekoton.abi
 
+import com.mazekine.nekoton.abi.param.AbiParam
 import com.mazekine.nekoton.models.Cell
 import com.mazekine.nekoton.models.CellSlice
 import com.mazekine.nekoton.models.Message

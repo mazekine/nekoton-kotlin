@@ -1,5 +1,6 @@
 package com.mazekine.nekoton.abi
 
+import com.mazekine.nekoton.abi.param.AbiParam
 import com.mazekine.nekoton.crypto.PublicKey
 import com.mazekine.nekoton.models.AccountState
 import com.mazekine.nekoton.models.BlockchainConfig
