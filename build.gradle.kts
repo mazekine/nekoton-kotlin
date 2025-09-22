@@ -79,6 +79,7 @@ dependencies {
     implementation("io.ktor:ktor-client-content-negotiation:2.3.12")
     implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.12")
     implementation("io.ktor:ktor-client-logging:2.3.12")
+    implementation("io.ktor:ktor-server-core-jvm:2.3.12")
 
     // Crypto libraries
     implementation("org.bouncycastle:bcprov-jdk18on:1.78.1")
@@ -97,6 +98,8 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-engine:5.10.0")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
     testImplementation("io.mockk:mockk:1.13.12")
+    testImplementation("io.ktor:ktor-server-tests-jvm:2.3.12")
+    testImplementation("io.ktor:ktor-server-test-host-jvm:2.3.12")
 }
 
 // Add Rust compilation task
