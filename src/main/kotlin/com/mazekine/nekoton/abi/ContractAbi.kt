@@ -232,7 +232,7 @@ data class ContractAbi(
             val eventId = extractFunctionId(body) ?: continue
             
             val event = events.values.find { it.id == eventId } ?: continue
-            val eventData = event.decodeInput(body.beginParse())
+            val eventData = event.decodeMessageBody(body)
             
             decodedEvents.add(Pair(event, eventData))
         }
