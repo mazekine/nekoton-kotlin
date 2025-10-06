@@ -222,8 +222,8 @@ data class ContractAbi(
      * @param transaction The transaction to decode
      * @return List of decoded events
      */
-    fun decodeTransactionEvents(transaction: Transaction): List<Pair<EventAbi, Map<String, Any>>> {
-        val decodedEvents = mutableListOf<Pair<EventAbi, Map<String, Any>>>()
+    fun decodeTransactionEvents(transaction: Transaction): List<Pair<EventAbi, Map<String, Any?>>> {
+        val decodedEvents = mutableListOf<Pair<EventAbi, Map<String, Any?>>>()
         
         for (outMsg in transaction.outMsgs) {
             if (!outMsg.isExternalOut()) continue
