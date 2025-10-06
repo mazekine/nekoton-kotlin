@@ -1,6 +1,7 @@
 package com.mazekine.nekoton.models
 
 import kotlinx.serialization.Serializable
+import java.util.Base64
 
 /**
  * Represents a blockchain address in the TON/Everscale network.
@@ -51,9 +52,19 @@ data class Address(
      * @return Base64-encoded user-friendly address
      */
     fun toUserFriendly(bounceable: Boolean = true, testOnly: Boolean = false): String {
-        // Implementation would require TON address encoding logic
-        // This is a placeholder for the actual implementation
-        TODO("User-friendly address encoding not yet implemented")
+        val tag = (if (bounceable) 0x11 else 0x51) or (if (testOnly) 0x80 else 0x00)
+        val data = ByteArray(36)
+        data[0] = tag.toByte()
+        data[1] = workchain.toByte()
+        address.copyInto(data, destinationOffset = 2)
+
+        val crc = crc16Ccitt(data, 34)
+        data[34] = ((crc shr 8) and 0xFF).toByte()
+        data[35] = (crc and 0xFF).toByte()
+
+        return Base64.getUrlEncoder()
+            .withoutPadding()
+            .encodeToString(data)
     }
 
     /**
@@ -116,13 +127,29 @@ data class Address(
         private fun parseAddress(addressString: String): ByteArray {
             val parts = addressString.split(":")
             require(parts.size == 2) { "Address must be in format 'workchain:address'" }
-            
+
             val hexAddress = parts[1]
             require(hexAddress.length == 64) { "Address part must be 64 hex characters" }
-            
+
             return hexAddress.chunked(2)
                 .map { it.toInt(16).toByte() }
                 .toByteArray()
+        }
+
+        private fun crc16Ccitt(data: ByteArray, length: Int): Int {
+            var crc = 0
+            for (i in 0 until length) {
+                crc = crc xor ((data[i].toInt() and 0xFF) shl 8)
+                repeat(8) {
+                    crc = if ((crc and 0x8000) != 0) {
+                        (crc shl 1) xor 0x1021
+                    } else {
+                        crc shl 1
+                    }
+                    crc = crc and 0xFFFF
+                }
+            }
+            return crc
         }
     }
 }
