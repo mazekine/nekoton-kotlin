@@ -328,13 +328,36 @@ data class BlockchainConfig(
      */
     fun buildParamsDictCell(): Cell {
         val entries = params.entries.sortedBy { it.key }
-        val builder = CellBuilder()
 
-        if (entries.isNotEmpty()) {
-            val serialized = entries.joinToString(";") { (index, cell) ->
-                "$index:${cell.toHex()}"
+        if (entries.isEmpty()) {
+            return CellBuilder().build()
+        }
+
+        return buildParamsTree(entries)
+    }
+
+    private fun buildParamsTree(entries: List<Map.Entry<Int, Cell>>): Cell {
+        if (entries.size <= Cell.MAX_REFERENCES) {
+            val builder = CellBuilder()
+            builder.writeUint(entries.size.toLong(), 8)
+
+            for ((index, cell) in entries) {
+                builder.writeUint(index.toLong(), 32)
+                builder.writeRef(cell)
             }
-            builder.writeString(serialized)
+
+            return builder.build()
+        }
+
+        val maxRefs = Cell.MAX_REFERENCES
+        val chunkSize = (entries.size + maxRefs - 1) / maxRefs
+        val chunks = entries.chunked(chunkSize)
+
+        val builder = CellBuilder()
+        builder.writeUint(chunks.size.toLong(), 8)
+
+        for (chunk in chunks) {
+            builder.writeRef(buildParamsTree(chunk))
         }
 
         return builder.build()
