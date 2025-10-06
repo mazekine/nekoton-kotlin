@@ -3,7 +3,6 @@ package com.mazekine.nekoton.abi
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 
-/** Result of a function emulation. */
 @Serializable
 data class ExecutionOutput(
     val exitCode: Int,
