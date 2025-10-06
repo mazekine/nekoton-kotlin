@@ -59,11 +59,29 @@ class AddressTest {
     fun testAddressHashMap() {
         val address = Address(TestConfig.TEST_ADDRESS)
         val addressMap = hashMapOf(address to 123)
-        
+
         assertEquals(123, addressMap[address])
         assertEquals(123, addressMap[Address(TestConfig.TEST_ADDRESS)])
     }
-    
+
+    @Test
+    fun testUserFriendlyEncoding() {
+        val address = Address(TestConfig.TEST_ADDRESS)
+
+        assertEquals(
+            "EQBr_lNfCwVPzQTypcjHC7vLXo8znUS0maAwe2nnVFxCQVnT",
+            address.toUserFriendly()
+        )
+        assertEquals(
+            "UQBr_lNfCwVPzQTypcjHC7vLXo8znUS0maAwe2nnVFxCQQQW",
+            address.toUserFriendly(bounceable = false)
+        )
+        assertEquals(
+            "kQBr_lNfCwVPzQTypcjHC7vLXo8znUS0maAwe2nnVFxCQeJZ",
+            address.toUserFriendly(testOnly = true)
+        )
+    }
+
     @Test
     fun testWorkchainRange() {
         // Valid workchains should not throw
