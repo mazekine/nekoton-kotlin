@@ -266,9 +266,21 @@ data class BlockchainConfig(
     val minterAddress: Address,
     val feeCollectorAddress: Address
 ) {
+    private val params: Map<Int, Cell> by lazy {
+        mapOf(
+            0 to createIntCell(globalId),
+            1 to createLongCell(capabilities),
+            2 to createIntCell(globalVersion),
+            3 to createAddressCell(configAddress),
+            4 to createAddressCell(electorAddress),
+            5 to createAddressCell(minterAddress),
+            6 to createAddressCell(feeCollectorAddress)
+        )
+    }
+
     /**
      * Gets the signature ID if signature with ID capability is enabled.
-     * 
+     *
      * @return Signature ID or null if not supported
      */
     fun getSignatureId(): Int? {
@@ -291,34 +303,59 @@ data class BlockchainConfig(
 
     /**
      * Checks if a configuration parameter exists.
-     * 
+     *
      * @param index Parameter index
      * @return true if the parameter exists
      */
     fun containsParam(index: Int): Boolean {
-        // This would require access to the actual config parameters
-        TODO("Config parameter checking not yet implemented")
+        return params.containsKey(index)
     }
 
     /**
      * Gets a raw configuration parameter.
-     * 
+     *
      * @param index Parameter index
      * @return The parameter cell or null if not found
      */
     fun getRawParam(index: Int): Cell? {
-        // This would require access to the actual config parameters
-        TODO("Config parameter retrieval not yet implemented")
+        return params[index]
     }
 
     /**
      * Builds a cell containing all configuration parameters.
-     * 
+     *
      * @return Cell with configuration parameters
      */
     fun buildParamsDictCell(): Cell {
-        // This would require the actual config serialization logic
-        TODO("Config parameters dict building not yet implemented")
+        val entries = params.entries.sortedBy { it.key }
+        val builder = CellBuilder()
+
+        if (entries.isNotEmpty()) {
+            val serialized = entries.joinToString(";") { (index, cell) ->
+                "$index:${cell.toHex()}"
+            }
+            builder.writeString(serialized)
+        }
+
+        return builder.build()
+    }
+
+    private fun createIntCell(value: Int): Cell {
+        val builder = CellBuilder()
+        builder.writeInt(value.toLong(), 32)
+        return builder.build()
+    }
+
+    private fun createLongCell(value: Long): Cell {
+        val builder = CellBuilder()
+        builder.writeUint(value, 64)
+        return builder.build()
+    }
+
+    private fun createAddressCell(address: Address): Cell {
+        val builder = CellBuilder()
+        builder.writeAddress(address)
+        return builder.build()
     }
 
     override fun toString(): String {
