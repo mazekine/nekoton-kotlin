@@ -39,6 +39,10 @@ enum class AbiParamType {
          * @return The corresponding AbiType
          */
         fun fromString(typeString: String): AbiParamType {
+            if (typeString.endsWith("[]")) {
+                return ARRAY
+            }
+
             val baseType = typeString.removeSuffix("[]")
 
             return when {
