@@ -225,7 +225,7 @@ data class Cell(
             require(offset == cellsData.size) { "Cell data size mismatch" }
 
             val constructed = arrayOfNulls<Cell>(header.cellsNum)
-            for (index in header.cellsNum - 1 downTo 0) {
+            for (index in 0 until header.cellsNum) {
                 val parsed = parsedCells[index]
                 val refs = parsed.refs.map { refIndex ->
                     require(refIndex in constructed.indices) { "Reference index out of range" }
